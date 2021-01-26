@@ -66,12 +66,11 @@ void stinky_delay(int ticks){
 
 // This is a function that outputs on pwm pulse, it needs to be
 // run in a loop in order to get a full pwm effect.
-void foux_pwm(double duty_cycle){
-	int max_time = 40000;
+void foux_pwm(int period, double duty_cycle){
 	turn_on_LED();
-	stinky_delay((int) max_time*duty_cycle);
+	stinky_delay((int) period*duty_cycle);
 	turn_off_LED();
-	stinky_delay(max_time - max_time*duty_cycle);
+	stinky_delay(period - period*duty_cycle);
 }
 
 int main(void){
@@ -93,7 +92,7 @@ int main(void){
 		}
 		*/
 		
-		foux_pwm(cycle);
+		foux_pwm(40000UL, cycle);
 		if(cycle >= 1.0){
 			cycle_increment = -0.01;
 		} else if(cycle <= 0.0){
