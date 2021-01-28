@@ -1,6 +1,6 @@
 ##  Lab Report ##
 
-Your Name: 
+Your Name: Jacob Mealey
 -----------
 
 
@@ -34,6 +34,7 @@ the hardware debounce is small RC circuit, that adds a slight delay as well as "
 The way I do it is I add a small delay after the button is pushed, this allows time for other potential "bounces" from being detected.
 
 * Question 3:
+We can't set it pull down because the logic is active low, so it would detect as being pressed when it is not. though this could be fixed in code? 
 
 * Question 4:
 Low speed is good for LEDs because first of all, the human eye can't tell the difference between a 10mHz led and an 80mHz, so why waste energy on keeping an

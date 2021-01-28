@@ -90,8 +90,8 @@ int main(void){
 			toggle_LED();
 			while((GPIOC->IDR & GPIO_IDR_IDR_13) != 0x00);
 		}
-		*/
 		
+		*/
 		foux_pwm(40000UL, cycle);
 		if(cycle >= 1.0){
 			cycle_increment = -0.01;
@@ -100,6 +100,5 @@ int main(void){
 		}	
 		cycle += cycle_increment;
 
-		
 	}
 }
