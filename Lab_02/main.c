@@ -53,19 +53,16 @@ int main(void){
 	System_Clock_Init(); // Switch System Clock = 80 MHz
 	I2C_GPIO_init();
 	I2C_Initialization(I2C1);
-	///GPIOC->ODR = 0U;
-	//GPIOC->ODR |= row_masks[0] | row_masks[1] | row_masks[2] | row_masks[3];
-	//ssd1306_TestAll();
-	//key=keypad[0][0];
-	ssd1306_Init();
 
+	ssd1306_Init();
+	ssd1306_Fill(Black);
 	while(1){
 		keypad_scan(&key);
-		ssd1306_Fill(White);
+		
 		message[0] =  key;
 		message[1] = '\0';
 		ssd1306_SetCursor(2,0);
-		ssd1306_WriteString(message, Font_11x18, Black);
+		ssd1306_WriteString(message, Font_11x18, White);
 		ssd1306_UpdateScreen();		
 	}	 // Deadloop
 }
@@ -82,7 +79,7 @@ void I2C_GPIO_init(void){
 	GPIOC->MODER |= gpioc_mode;
 	// set outputs to opendrain, turn them into variables?
 	GPIOC->OTYPER |= 1U<< 0 | 1U<<(2*1) | 1U<<(2*2) | 1U<<(2*3);
-	//GPIOC->PUPDR	|= 1U<<0 	| 1U<<(2*1) | 1U<<(2*2) | 1U<<(2*3);
+	GPIOC->PUPDR	|= 1U<<(2*4) 	| 1U<<(2*10) | 1U<<(2*11) | 1U<<(2*12);
 	
 	
 	// GPIO Mode: Input(00, reset), Output(01), AlterFunc(10), Analog(11, reset)
@@ -106,24 +103,23 @@ void I2C_GPIO_init(void){
 void keypad_scan(unsigned char *key){
 	int i, j, d;
 	// Set all output pins low
-	GPIOC->ODR &= (row_masks[0] | row_masks[1] | row_masks[2] |  row_masks[3]);
-	for(i = 0; i < 4; i++){
+	GPIOC->ODR |= (row_masks[0] | row_masks[1] | row_masks[2] |  row_masks[3]);
+	for(i = 1; i < 4; i++){
 		if((GPIOC->IDR & col_masks[i]) != (col_masks[i])){
 			ColumnPressed = i;
-			break;
 		}
 	}
 	GPIOC->ODR &= ~(row_masks[0] | row_masks[1] | row_masks[2] |  row_masks[3]);
 	for(d=0;d<25;d++);
 	for(j =0; j < 4; j++){
 		GPIOC->ODR &= ~(row_masks[j]);
-		if((GPIOC->IDR & col_masks[j]) != (col_masks[j])){
+		if((GPIOC->IDR & col_masks[ColumnPressed]) != (col_masks[ColumnPressed])){
 			RowPressed = j;
-			break;
+			*key = keypad[RowPressed][ColumnPressed];
 		}
 		GPIOC->ODR |= row_masks[j];
 	}
-	*key = keypad[RowPressed][ColumnPressed];
+	
 }
 
 
