@@ -15,41 +15,12 @@
 #define I2C_SCL_PIN  8
 #define I2C_SDA_PIN  9
 #define I2C_PORT     GPIOB
-
+#define gpioc_mode 0x0000055;
+unsigned char key;
 uint8_t Data_Receive[6];
 uint8_t Data_Send[6];
-#define gpioc_mode 0x3F00300;
 
-void I2C_GPIO_init(void);
-unsigned char keypad_scan();
-
-int main(void){
-	char message[64] = "ABCDEFGHIJK";
-	
-	System_Clock_Init(); // Switch System Clock = 80 MHz
-	I2C_GPIO_init();
-	//I2C_Initialization(I2C1);
-
-	//ssd1306_TestAll();
-	//ssd1306_Init();
-	//ssd1306_Fill(Black);
-	//ssd1306_SetCursor(2,0);
-	//ssd1306_WriteString(message, Font_16x26, White);		
-		
-	while(1) {
-		keypad_scan();
-	}	 // Deadloop
-}
-
-// Configure I2C1_SCL (PB8) Pin as : Alternate function, High Speed, Open drain, Pull up 
-// Configure I2C1_SDA (PB9) Pin as : Alternate function, High Speed, Open drain, Pull up
-// PB 8 <--> AF4 (I2C1_SCL)
-// PB 9 <--> AF4 (I2C1_SDA)
-
-unsigned char keypad_scan(void){
-	unsigned char ColumnPressed, RowPressed;
-	unsigned char key = 0xFF;
-	unsigned int row_masks[] = {
+unsigned int row_masks[] = {
 		GPIO_ODR_ODR_0, 
 		GPIO_ODR_ODR_1, 
 		GPIO_ODR_ODR_2, 
@@ -62,33 +33,57 @@ unsigned char keypad_scan(void){
 		GPIO_IDR_IDR_11,
 		GPIO_IDR_IDR_12
 	};
-	//scan columns
-	int i;
-	int j;
-	for(i = 0; i < 4; i++){
-		if((GPIOC->IDR & col_masks[i]) == col_masks[i]){
-			ColumnPressed = i;
-		}
-	}
+
+unsigned char keypad[4][4] = 
+{
+	{'1', '2', '3', 'A'},
+	{'4', '5', '6', 'B'},
+	{'7', '8', '9', 'C'},
+	{'*', '0', '#', 'D'}
+};
+
+unsigned char message[64] = "moo";
+unsigned char ColumnPressed, RowPressed;
+
+
+void I2C_GPIO_init(void);
+void keypad_scan(unsigned char * key);
+int main(void){
 	
-	for(j = 0; j < 4; j++){
-		GPIOC->ODR = row_masks[j];
-		for(i = 0; i < 100; i++);
-		if((GPIOC->IDR & col_masks[ColumnPressed]) == col_masks[ColumnPressed]){
-			RowPressed = j;
-		}
-	}
-	
-	RowPressed =0;
-	ColumnPressed =0;
-	return key;
+	System_Clock_Init(); // Switch System Clock = 80 MHz
+	I2C_GPIO_init();
+	I2C_Initialization(I2C1);
+	///GPIOC->ODR = 0U;
+	//GPIOC->ODR |= row_masks[0] | row_masks[1] | row_masks[2] | row_masks[3];
+	//ssd1306_TestAll();
+	//key=keypad[0][0];
+	ssd1306_Init();
+
+	while(1){
+		keypad_scan(&key);
+		ssd1306_Fill(White);
+		message[0] =  key;
+		message[1] = '\0';
+		ssd1306_SetCursor(2,0);
+		ssd1306_WriteString(message, Font_11x18, Black);
+		ssd1306_UpdateScreen();		
+	}	 // Deadloop
 }
 
+// Configure I2C1_SCL (PB8) Pin as : Alternate function, High Speed, Open drain, Pull up 
+// Configure I2C1_SDA (PB9) Pin as : Alternate function, High Speed, Open drain, Pull up
+// PB 8 <--> AF4 (I2C1_SCL)
+// PB 9 <--> AF4 (I2C1_SDA)
+
 void I2C_GPIO_init(void){
-	
+
 	RCC->AHB2ENR  |=  RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN;
 	GPIOC->MODER &= 0x00000000;
 	GPIOC->MODER |= gpioc_mode;
+	// set outputs to opendrain, turn them into variables?
+	GPIOC->OTYPER |= 1U<< 0 | 1U<<(2*1) | 1U<<(2*2) | 1U<<(2*3);
+	//GPIOC->PUPDR	|= 1U<<0 	| 1U<<(2*1) | 1U<<(2*2) | 1U<<(2*3);
+	
 	
 	// GPIO Mode: Input(00, reset), Output(01), AlterFunc(10), Analog(11, reset)
 	I2C_PORT->MODER   &= ~( 3U<<(2*I2C_SCL_PIN) | 3U<<(2*I2C_SDA_PIN) );  // Clear Mode	
@@ -107,4 +102,28 @@ void I2C_GPIO_init(void){
 	// GPIO Output Type: Output push-pull (0, reset), Output open drain (1)
 	I2C_PORT->OTYPER  |= 1U<<I2C_SCL_PIN | 1U<<7;  // Open Drain 
 }
+
+void keypad_scan(unsigned char *key){
+	int i, j, d;
+	// Set all output pins low
+	GPIOC->ODR &= (row_masks[0] | row_masks[1] | row_masks[2] |  row_masks[3]);
+	for(i = 0; i < 4; i++){
+		if((GPIOC->IDR & col_masks[i]) != (col_masks[i])){
+			ColumnPressed = i;
+			break;
+		}
+	}
+	GPIOC->ODR &= ~(row_masks[0] | row_masks[1] | row_masks[2] |  row_masks[3]);
+	for(d=0;d<25;d++);
+	for(j =0; j < 4; j++){
+		GPIOC->ODR &= ~(row_masks[j]);
+		if((GPIOC->IDR & col_masks[j]) != (col_masks[j])){
+			RowPressed = j;
+			break;
+		}
+		GPIOC->ODR |= row_masks[j];
+	}
+	*key = keypad[RowPressed][ColumnPressed];
+}
+
 
