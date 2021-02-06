@@ -38,8 +38,9 @@ unsigned char keypad[4][4] =
 {
 	{'1', '2', '3', 'A'},
 	{'4', '5', '6', 'B'},
-	{'7', '8', '9', 'C'},
-	{'*', '0', '#', 'D'}
+	{'*', '0', '#', 'D'},
+	{'7', '8', '9', 'C'}
+	
 };
 
 unsigned char message[64] = "moo";
@@ -47,7 +48,7 @@ unsigned char ColumnPressed, RowPressed;
 
 
 void I2C_GPIO_init(void);
-void keypad_scan(unsigned char * key);
+unsigned char keypad_scan();
 int main(void){
 	
 	System_Clock_Init(); // Switch System Clock = 80 MHz
@@ -57,7 +58,7 @@ int main(void){
 	ssd1306_Init();
 	ssd1306_Fill(Black);
 	while(1){
-		keypad_scan(&key);
+		key = keypad_scan();
 		
 		message[0] =  key;
 		message[1] = '\0';
@@ -100,26 +101,22 @@ void I2C_GPIO_init(void){
 	I2C_PORT->OTYPER  |= 1U<<I2C_SCL_PIN | 1U<<7;  // Open Drain 
 }
 
-void keypad_scan(unsigned char *key){
-	int i, j, d;
-	// Set all output pins low
-	GPIOC->ODR |= (row_masks[0] | row_masks[1] | row_masks[2] |  row_masks[3]);
-	for(i = 1; i < 4; i++){
-		if((GPIOC->IDR & col_masks[i]) != (col_masks[i])){
-			ColumnPressed = i;
-		}
-	}
-	GPIOC->ODR &= ~(row_masks[0] | row_masks[1] | row_masks[2] |  row_masks[3]);
-	for(d=0;d<25;d++);
-	for(j =0; j < 4; j++){
-		GPIOC->ODR &= ~(row_masks[j]);
-		if((GPIOC->IDR & col_masks[ColumnPressed]) != (col_masks[ColumnPressed])){
-			RowPressed = j;
-			*key = keypad[RowPressed][ColumnPressed];
-		}
-		GPIOC->ODR |= row_masks[j];
-	}
+unsigned char keypad_scan(unsigned char *key){
+	int i, j, d; 
 	
+	GPIOC->ODR |= (row_masks[0] | row_masks[1] | row_masks[2] |  row_masks[3]);
+	for(j = 0; j < 4; j++){
+		GPIOC->ODR &= ~(row_masks[j]);
+		for(d=0;d<25;d++);
+		for(i = 0; i < 4; i++){
+			if((GPIOC->IDR & col_masks[i]) == 0x00){
+				return keypad[j][i];
+			}
+		}
+
+		GPIOC->ODR ^= row_masks[j];
+	}
+	return 0xFF;
 }
 
 
