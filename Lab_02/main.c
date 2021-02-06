@@ -43,12 +43,15 @@ unsigned char keypad[4][4] =
 	
 };
 
-unsigned char message[64] = "moo";
+unsigned char message[64] = "";
 unsigned char ColumnPressed, RowPressed;
+int pos;
 
 
 void I2C_GPIO_init(void);
-unsigned char keypad_scan();
+unsigned char keypad_scan(void);
+void stinky_delay(int ticks);
+
 int main(void){
 	
 	System_Clock_Init(); // Switch System Clock = 80 MHz
@@ -59,12 +62,25 @@ int main(void){
 	ssd1306_Fill(Black);
 	while(1){
 		key = keypad_scan();
+		if(pos > 6){
+			for(pos = 0; pos < 7; pos++){
+				message[pos] = ' ';
+			}
+			pos = 0;
+		}else if(key != 0xFF && key != '#'){
+			message[pos] =  key;
+			message[pos + 1] = '\0';
+			pos++;
+		}else if(key == '#' && pos > 0){
+			pos--;
+			message[pos] = ' ';
+		}
 		
-		message[0] =  key;
-		message[1] = '\0';
+		
 		ssd1306_SetCursor(2,0);
 		ssd1306_WriteString(message, Font_11x18, White);
-		ssd1306_UpdateScreen();		
+		ssd1306_UpdateScreen();	
+		//stinky_delay(10000);
 	}	 // Deadloop
 }
 
@@ -101,22 +117,28 @@ void I2C_GPIO_init(void){
 	I2C_PORT->OTYPER  |= 1U<<I2C_SCL_PIN | 1U<<7;  // Open Drain 
 }
 
-unsigned char keypad_scan(unsigned char *key){
-	int i, j, d; 
-	
+unsigned char keypad_scan(void){
+	int i, j, d;
+	unsigned char new_key;
+	new_key = 0xFF;
 	GPIOC->ODR |= (row_masks[0] | row_masks[1] | row_masks[2] |  row_masks[3]);
 	for(j = 0; j < 4; j++){
 		GPIOC->ODR &= ~(row_masks[j]);
 		for(d=0;d<25;d++);
 		for(i = 0; i < 4; i++){
 			if((GPIOC->IDR & col_masks[i]) == 0x00){
-				return keypad[j][i];
+				new_key = keypad[j][i];
+				while((GPIOC->IDR & col_masks[i]) == 0x00);
 			}
 		}
 
 		GPIOC->ODR ^= row_masks[j];
 	}
-	return 0xFF;
+	return new_key;
 }
 
 
+void stinky_delay(int ticks){
+	int d;
+	for(d = 0; d < ticks; d++);
+}
