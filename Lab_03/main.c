@@ -20,7 +20,7 @@
 #define I2C_SCL_PIN  8
 #define I2C_SDA_PIN  9
 #define I2C_PORT     GPIOB
-#define gpioc_mode 0x0000055;
+#define gpioc_mode 0x0055455;
 unsigned char key;
 uint8_t Data_Receive[6];
 uint8_t Data_Send[6];
@@ -48,14 +48,27 @@ unsigned char keypad[4][4] =
 	
 };
 
+	short bits_full[4] = {
+		0x9, //0b1001
+		0xA, //0b1010
+		0x6, //0b0110
+		0x5  //0b0101
+	};
+
 unsigned char message[64] = "";
 unsigned char ColumnPressed, RowPressed;
 int pos;
 
+int A = GPIO_ODR_ODR_5;
+int notA = GPIO_ODR_ODR_6;
+int B = GPIO_ODR_ODR_8;
+int notB = GPIO_ODR_ODR_9;
 
 void I2C_GPIO_init(void);
 unsigned char keypad_scan(void);
 void stinky_delay(int ticks);
+void full_step(int dir, int step);
+void half_step(int dir, int step);
 
 int main(void){
 	
@@ -66,6 +79,7 @@ int main(void){
 	ssd1306_Init();
 	ssd1306_Fill(Black);
 	while(1){
+		/*
 		key = keypad_scan();
 		if(pos > 6){
 			for(pos = 0; pos < 7; pos++){
@@ -86,6 +100,8 @@ int main(void){
 		ssd1306_WriteString(message, Font_11x18, White);
 		ssd1306_UpdateScreen();	
 		//stinky_delay(10000);
+		*/
+		full_step(1, 1);
 	}	 // Deadloop
 }
 
@@ -103,6 +119,8 @@ void I2C_GPIO_init(void){
 	GPIOC->OTYPER |= 1U<< 0 | 1U<<(2*1) | 1U<<(2*2) | 1U<<(2*3);
 	GPIOC->PUPDR	|= 1U<<(2*4) 	| 1U<<(2*10) | 1U<<(2*11) | 1U<<(2*12);
 	
+	// Set STEPPER pins to push pull
+	GPIOC->OTYPER &= ~(1<<(2*5) | 1<<(2*6) | 1<<(2*8) | 1<<(2*9));
 	
 	// GPIO Mode: Input(00, reset), Output(01), AlterFunc(10), Analog(11, reset)
 	I2C_PORT->MODER   &= ~( 3U<<(2*I2C_SCL_PIN) | 3U<<(2*I2C_SDA_PIN) );  // Clear Mode	
@@ -122,16 +140,34 @@ void I2C_GPIO_init(void){
 	I2C_PORT->OTYPER  |= 1U<<I2C_SCL_PIN | 1U<<7;  // Open Drain 
 }
 
-void full_step(int dir, int step){
-	int i, j, d;
-	if(dir == -1){
-		i = 4;
-	}else if(dir == 1){
-		i = 0;
-	}
-	for(; (i < step) && dir; i += dir){
-		stinky_delay(6000);
-		
+void half_step(int dir, int step){
+	// A half step is 8 sequences long
+	// We're gonna want an array where each bit 
+	// Corresponds to an outout
+	// MSB is A and LSB is ~B
+	// 0b1001 
+	short bits[8] = {
+		0x9, // 0b1001
+		0x8, // 0b1000
+		0xA, // 0b1010
+		0x2, // 0b0010
+		0x6, // 0b0110
+		0x4, // 0b0100
+		0x5, // 0b0101
+		0x1, // 0b0001
+	};
+	int i;
+
+	for(i = 0; i < 8; i++){
+		GPIOC->ODR &= ~(GPIO_IDR_IDR_5);
+		GPIOC->ODR &= ~(GPIO_IDR_IDR_8);
+		GPIOC->ODR &= ~(GPIO_IDR_IDR_6);
+		GPIOC->ODR &= ~(GPIO_IDR_IDR_9);
+		GPIOC->ODR |= ((bits[i]>>3) & 0x1) << 5; // set pin 5 (A) to MSB of bits[i]
+		GPIOC->ODR |= ((bits[i]>>2) & 0x1) << 6; // set pin 6 (~A) to 3rd bit of bits[i]
+		GPIOC->ODR |= ((bits[i]>>1) & 0x1) << 8; // set pin 8 (B) to 2nd bit of bits[i]
+		GPIOC->ODR |= ((bits[i]) & 0x1) << 9; // set pin 9 (~B) to LSB of bits[i]
+		stinky_delay(30000);
 	}
 }
 

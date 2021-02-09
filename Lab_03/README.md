@@ -19,15 +19,27 @@ Answers to Pre-lab Questions
 This part is required only if you are requested to write your answers here. 
 
 * Question 1:
-0x0000055
+Full Step Sequence:
+ A: 1010
+~A: 0101
+ B: 0110
+~B: 1001
 
+Half Stepping: 
+ A: 11100000
+~A: 00001110
+ B: 00111000
+~B: 10000011
+
+Question 2:
+a. To go faster simply shorten the delay between each pulse
+b. To reverse, instead of A -> ~A -> B -> ~B go ~B -> B -> ~A -> A
 
 Answers to After-lab Questions
 -------
 
 * Question 1:
 
-When the multiple are pressed, mine works but it will always go to the most recently pressed button.
 
 * Question 2:
 
@@ -36,11 +48,8 @@ Suggestions and Comments
 -------
 
 * Do you have comments or suggestions for the lab and course?
-N/A good lab. Sorry about the OLEDs, not much can be done about that though.
 
 * Do you have comments or suggestions for the textbook and lab handouts? Any typos or errors?
-Nope, everything seemed in good shape. I had some trouble with the boilerplate code for this lab
-but thats more on me then you. 
 
 
 
