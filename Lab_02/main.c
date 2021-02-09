@@ -1,3 +1,9 @@
+/* ECE 331 Lab 03 
+ * Author: Jacob Mealey <jacob.mealey@maine.edu>
+ * Date Last Modified: 02/09/21:w
+ */
+
+
 #include "stm32l476xx.h"
 #include "SysClock.h"
 #include "I2C.h"
@@ -20,6 +26,14 @@ unsigned char key;
 uint8_t Data_Receive[6];
 uint8_t Data_Send[6];
 
+// Function Defintions
+void GPIO_init(void);
+unsigned char keypad_scan(void);
+void stinky_delay(int ticks);
+
+
+// Variables REQUIRED for proper keypad scanning
+// Do not modify
 unsigned int row_masks[] = {
 		GPIO_ODR_ODR_0, 
 		GPIO_ODR_ODR_1, 
@@ -43,45 +57,43 @@ unsigned char keypad[4][4] =
 	
 };
 
-unsigned char message[64] = "";
-unsigned char ColumnPressed, RowPressed;
+// These two are for manipulating
+// Text on the display
+char message[64] = "";
 int pos;
-
-
-void I2C_GPIO_init(void);
-unsigned char keypad_scan(void);
-void stinky_delay(int ticks);
 
 int main(void){
 	
 	System_Clock_Init(); // Switch System Clock = 80 MHz
-	I2C_GPIO_init();
+	GPIO_init();
 	I2C_Initialization(I2C1);
 
 	ssd1306_Init();
 	ssd1306_Fill(Black);
 	while(1){
 		key = keypad_scan();
+		// We only want to display 6 characters
 		if(pos > 6){
 			for(pos = 0; pos < 7; pos++){
 				message[pos] = ' ';
 			}
 			pos = 0;
+		// Check if not a special key or blank
 		}else if(key != 0xFF && key != '#'){
 			message[pos] =  key;
 			message[pos + 1] = '\0';
 			pos++;
+		// Delete characters if key is '#'
 		}else if(key == '#' && pos > 0){
 			pos--;
 			message[pos] = ' ';
 		}
 		
-		
+		// Update Screen
 		ssd1306_SetCursor(2,0);
 		ssd1306_WriteString(message, Font_11x18, White);
 		ssd1306_UpdateScreen();	
-		//stinky_delay(10000);
-	}	 // Deadloop
+	}	 
 }
 
 // Configure I2C1_SCL (PB8) Pin as : Alternate function, High Speed, Open drain, Pull up 
@@ -89,7 +101,7 @@ int main(void){
 // PB 8 <--> AF4 (I2C1_SCL)
 // PB 9 <--> AF4 (I2C1_SDA)
 
-void I2C_GPIO_init(void){
+void GPIO_init(void){
 
 	RCC->AHB2ENR  |=  RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN;
 	GPIOC->MODER &= 0x00000000;
@@ -117,21 +129,27 @@ void I2C_GPIO_init(void){
 	I2C_PORT->OTYPER  |= 1U<<I2C_SCL_PIN | 1U<<7;  // Open Drain 
 }
 
+// Keypad scan
+// Returns an unsigned char of what was just
+// Pressed on the keypad
 unsigned char keypad_scan(void){
 	int i, j, d;
 	unsigned char new_key;
 	new_key = 0xFF;
+	// Set Rows High
 	GPIOC->ODR |= (row_masks[0] | row_masks[1] | row_masks[2] |  row_masks[3]);
 	for(j = 0; j < 4; j++){
+		// Individually set each row low
 		GPIOC->ODR &= ~(row_masks[j]);
-		for(d=0;d<25;d++);
+		stinky_delay(25);
 		for(i = 0; i < 4; i++){
+			// Check a specific column on the current row
 			if((GPIOC->IDR & col_masks[i]) == 0x00){
 				new_key = keypad[j][i];
 				while((GPIOC->IDR & col_masks[i]) == 0x00);
 			}
 		}
-
+		// Reset current row
 		GPIOC->ODR ^= row_masks[j];
 	}
 	return new_key;

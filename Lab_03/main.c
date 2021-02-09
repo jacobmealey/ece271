@@ -1,3 +1,8 @@
+/* ECE 331 Lab 03 
+ * Author: Jacob Mealey <jacob.mealey@maine.edu>
+ * Date Last Modified: 02/09/21:w
+ */
+
 #include "stm32l476xx.h"
 #include "SysClock.h"
 #include "I2C.h"
