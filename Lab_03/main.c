@@ -49,7 +49,7 @@ unsigned char keypad[4][4] =
 };
 
 
-unsigned char message[64] = "";
+char message[64] = "";
 unsigned char ColumnPressed, RowPressed;
 int pos;
 
@@ -78,16 +78,24 @@ int main(void){
 		if(pos > 6){
 				clear_str(message, &pos);
 		}else if(key == '#' && pos > 0){
+			// Delete Most Recent Number
 			pos--;
 			message[pos] = ' ';
 		}else if(key == 'C'){
+			// Reset Position
 			motor_pos = 0;
 			clear_str(message, &pos);
 			message[pos] = ' ';
 		}else if(key == 'A'){
+			// Turn Motor Clockwise
 			motor_pos = string_to_int(message, pos);
-			motor_pos = motor_pos * 3; // Not *exact* but nothing is so :)
+			motor_pos = motor_pos * 3; 
 			half_step(1, motor_pos);
+		}else if(key == 'B'){	
+			// Turn Motor Counter Clockwis 
+			motor_pos = string_to_int(message, pos); 
+			motor_pos = motor_pos * 3;
+			half_step(-1, motor_pos);
 		}else if(key == 'B' || key == 'D' || key == '*'){
 			 // Do nothing
 		}else if(key != 0xFF){
@@ -180,18 +188,35 @@ void half_step(int dir, int step){
 		0x1, // 0b0001
 	};
 	int i, current_step;
-	for(current_step = 0; current_step < step; current_step++){
-		// This is the loop for a single step
-		for(i = 0; i < 8; i++){
-			GPIOC->ODR &= ~(GPIO_IDR_IDR_5);
-			GPIOC->ODR &= ~(GPIO_IDR_IDR_8);
-			GPIOC->ODR &= ~(GPIO_IDR_IDR_6);
-			GPIOC->ODR &= ~(GPIO_IDR_IDR_9);
-			GPIOC->ODR |= ((bits[i]>>3) & 0x1) << 5; // set pin 5 (A) to MSB of bits[i]
-			GPIOC->ODR |= ((bits[i]>>2) & 0x1) << 6; // set pin 6 (~A) to 3rd bit of bits[i]
-			GPIOC->ODR |= ((bits[i]>>1) & 0x1) << 8; // set pin 8 (B) to 2nd bit of bits[i]
-			GPIOC->ODR |= ((bits[i]) & 0x1) << 9; // set pin 9 (~B) to LSB of bits[i]
-			stinky_delay(30000);
+	if(dir == 1){
+		for(current_step = 0; current_step < step; current_step++){
+			// This is the loop for a single step clockwise
+			for(i = 0; i < 8; i++){
+				GPIOC->ODR &= ~(GPIO_IDR_IDR_5);
+				GPIOC->ODR &= ~(GPIO_IDR_IDR_8);
+				GPIOC->ODR &= ~(GPIO_IDR_IDR_6);
+				GPIOC->ODR &= ~(GPIO_IDR_IDR_9);
+				GPIOC->ODR |= ((bits[i]>>3) & 0x1) << 5; // set pin 5 (A) to MSB of bits[i]
+				GPIOC->ODR |= ((bits[i]>>2) & 0x1) << 6; // set pin 6 (~A) to 3rd bit of bits[i]
+				GPIOC->ODR |= ((bits[i]>>1) & 0x1) << 8; // set pin 8 (B) to 2nd bit of bits[i]
+				GPIOC->ODR |= ((bits[i]) & 0x1) << 9; // set pin 9 (~B) to LSB of bits[i]
+				stinky_delay(30000);
+			}
+		}
+	}else if(dir == -1){
+		for(current_step = 0; current_step < step; current_step++){
+		// This is the loop for a single step counter clockwise
+			for(i = 8; i > 0; i--){
+				GPIOC->ODR &= ~(GPIO_IDR_IDR_5);
+				GPIOC->ODR &= ~(GPIO_IDR_IDR_8);
+				GPIOC->ODR &= ~(GPIO_IDR_IDR_6);
+				GPIOC->ODR &= ~(GPIO_IDR_IDR_9);
+				GPIOC->ODR |= ((bits[i]) & 0x1) << 9; // set pin 9 (~B) to LSB of bits[i]
+				GPIOC->ODR |= ((bits[i]>>1) & 0x1) << 8; // set pin 8 (B) to 2nd bit of bits[i]
+				GPIOC->ODR |= ((bits[i]>>2) & 0x1) << 6; // set pin 6 (~A) to 3rd bit of bits[i]
+				GPIOC->ODR |= ((bits[i]>>3) & 0x1) << 5; // set pin 5 (A) to MSB of bits[i]
+				stinky_delay(30000);
+			}
 		}
 	}
 }
