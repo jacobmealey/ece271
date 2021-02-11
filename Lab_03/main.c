@@ -48,27 +48,19 @@ unsigned char keypad[4][4] =
 	
 };
 
-	short bits_full[4] = {
-		0x9, //0b1001
-		0xA, //0b1010
-		0x6, //0b0110
-		0x5  //0b0101
-	};
 
 unsigned char message[64] = "";
 unsigned char ColumnPressed, RowPressed;
 int pos;
 
-int A = GPIO_ODR_ODR_5;
-int notA = GPIO_ODR_ODR_6;
-int B = GPIO_ODR_ODR_8;
-int notB = GPIO_ODR_ODR_9;
+int motor_pos;
 
 void I2C_GPIO_init(void);
 unsigned char keypad_scan(void);
 void stinky_delay(int ticks);
 void full_step(int dir, int step);
 void half_step(int dir, int step);
+int string_to_int(char * string, int len);
 
 int main(void){
 	
@@ -78,30 +70,40 @@ int main(void){
 
 	ssd1306_Init();
 	ssd1306_Fill(Black);
+	motor_pos = 0;
 	while(1){
-		/*
+		
 		key = keypad_scan();
 		if(pos > 6){
 			for(pos = 0; pos < 7; pos++){
 				message[pos] = ' ';
 			}
 			pos = 0;
-		}else if(key != 0xFF && key != '#'){
-			message[pos] =  key;
-			message[pos + 1] = '\0';
-			pos++;
+		
 		}else if(key == '#' && pos > 0){
 			pos--;
 			message[pos] = ' ';
+		}else if(key == 'C'){
+			motor_pos = 0;
+			pos = 0;
+		}else if(key == 'A'){
+			motor_pos = string_to_int(message, pos);
+			half_step(1, motor_pos);
+		}else if(key == 'B' || key == 'D' || key == '*'){
+			 // Do nothing
+		}else if(key != 0xFF){
+			message[pos] =  key;
+			message[pos + 1] = '\0';
+			pos++;
 		}
-		
 		
 		ssd1306_SetCursor(2,0);
 		ssd1306_WriteString(message, Font_11x18, White);
 		ssd1306_UpdateScreen();	
 		//stinky_delay(10000);
-		*/
-		full_step(1, 1);
+		
+		///half_step(1, 10);
+		//stinky_delay(10000);
 	}	 // Deadloop
 }
 
@@ -140,6 +142,28 @@ void I2C_GPIO_init(void){
 	I2C_PORT->OTYPER  |= 1U<<I2C_SCL_PIN | 1U<<7;  // Open Drain 
 }
 
+void full_step(int dir, int step){
+	int i;
+	
+	short bits[4] = {
+		0x9, //0b1001
+		0xA, //0b1010
+		0x6, //0b0110
+		0x5  //0b0101
+	};
+	for(i = 0; i < 4; i++){
+		GPIOC->ODR &= ~(GPIO_IDR_IDR_5);
+		GPIOC->ODR &= ~(GPIO_IDR_IDR_8);
+		GPIOC->ODR &= ~(GPIO_IDR_IDR_6);
+		GPIOC->ODR &= ~(GPIO_IDR_IDR_9);
+		GPIOC->ODR |= ((bits[i]>>3) & 0x1) << 5; // set pin 5 (A) to MSB of bits[i]
+		GPIOC->ODR |= ((bits[i]>>2) & 0x1) << 6; // set pin 6 (~A) to 3rd bit of bits[i]
+		GPIOC->ODR |= ((bits[i]>>1) & 0x1) << 8; // set pin 8 (B) to 2nd bit of bits[i]
+		GPIOC->ODR |= ((bits[i]) & 0x1) << 9; // set pin 9 (~B) to LSB of bits[i]
+		stinky_delay(60000);
+	}
+}
+
 void half_step(int dir, int step){
 	// A half step is 8 sequences long
 	// We're gonna want an array where each bit 
@@ -156,18 +180,20 @@ void half_step(int dir, int step){
 		0x5, // 0b0101
 		0x1, // 0b0001
 	};
-	int i;
-
-	for(i = 0; i < 8; i++){
-		GPIOC->ODR &= ~(GPIO_IDR_IDR_5);
-		GPIOC->ODR &= ~(GPIO_IDR_IDR_8);
-		GPIOC->ODR &= ~(GPIO_IDR_IDR_6);
-		GPIOC->ODR &= ~(GPIO_IDR_IDR_9);
-		GPIOC->ODR |= ((bits[i]>>3) & 0x1) << 5; // set pin 5 (A) to MSB of bits[i]
-		GPIOC->ODR |= ((bits[i]>>2) & 0x1) << 6; // set pin 6 (~A) to 3rd bit of bits[i]
-		GPIOC->ODR |= ((bits[i]>>1) & 0x1) << 8; // set pin 8 (B) to 2nd bit of bits[i]
-		GPIOC->ODR |= ((bits[i]) & 0x1) << 9; // set pin 9 (~B) to LSB of bits[i]
-		stinky_delay(30000);
+	int i, current_step;
+	for(current_step = 0; current_step < step; current_step++){
+		// This is the loop for a single step
+		for(i = 0; i < 8; i++){
+			GPIOC->ODR &= ~(GPIO_IDR_IDR_5);
+			GPIOC->ODR &= ~(GPIO_IDR_IDR_8);
+			GPIOC->ODR &= ~(GPIO_IDR_IDR_6);
+			GPIOC->ODR &= ~(GPIO_IDR_IDR_9);
+			GPIOC->ODR |= ((bits[i]>>3) & 0x1) << 5; // set pin 5 (A) to MSB of bits[i]
+			GPIOC->ODR |= ((bits[i]>>2) & 0x1) << 6; // set pin 6 (~A) to 3rd bit of bits[i]
+			GPIOC->ODR |= ((bits[i]>>1) & 0x1) << 8; // set pin 8 (B) to 2nd bit of bits[i]
+			GPIOC->ODR |= ((bits[i]) & 0x1) << 9; // set pin 9 (~B) to LSB of bits[i]
+			stinky_delay(30000);
+		}
 	}
 }
 
@@ -195,4 +221,12 @@ unsigned char keypad_scan(void){
 void stinky_delay(int ticks){
 	int d;
 	for(d = 0; d < ticks; d++);
+}
+
+int string_to_int(char * string, int len){
+	int i, num = 0;
+	for(i = 0; i < len; i++){
+		num = (num * 10) + (string[i] - '0');
+	}
+	return num;
 }
