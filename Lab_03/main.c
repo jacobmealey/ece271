@@ -61,6 +61,7 @@ void stinky_delay(int ticks);
 void full_step(int dir, int step);
 void half_step(int dir, int step);
 int string_to_int(char * string, int len);
+int clear_str(char * string, int * len);
 
 int main(void){
 	
@@ -75,19 +76,17 @@ int main(void){
 		
 		key = keypad_scan();
 		if(pos > 6){
-			for(pos = 0; pos < 7; pos++){
-				message[pos] = ' ';
-			}
-			pos = 0;
-		
+				clear_str(message, &pos);
 		}else if(key == '#' && pos > 0){
 			pos--;
 			message[pos] = ' ';
 		}else if(key == 'C'){
 			motor_pos = 0;
-			pos = 0;
+			clear_str(message, &pos);
+			message[pos] = ' ';
 		}else if(key == 'A'){
 			motor_pos = string_to_int(message, pos);
+			motor_pos = motor_pos * 3; // Not *exact* but nothing is so :)
 			half_step(1, motor_pos);
 		}else if(key == 'B' || key == 'D' || key == '*'){
 			 // Do nothing
@@ -229,4 +228,12 @@ int string_to_int(char * string, int len){
 		num = (num * 10) + (string[i] - '0');
 	}
 	return num;
+}
+
+int clear_str(char * string, int * len){
+	int pos;
+	for(pos = 0; pos < *len; pos++){
+		message[pos] = ' ';
+	}
+	*len = 0;
 }
