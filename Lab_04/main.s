@@ -39,12 +39,12 @@ __main	PROC
     ;       10: Alternate function mode, 11: Analog mode (reset state)
 	LDR r0, =GPIOA_BASE
 	LDR r1, [r0, #GPIO_MODER]
-	EOR r1, r1, ~(r2)
-	ORR r1, r1, r2
+    EOR r1, r1, #(3<<(2*LED_PIN))
+    ORR r1, r1, #(1<<(2*LED_PIN))
 	STR r1, [r0, #GPIO_MODER]
 	
 	LDR r1, [r0, #GPIO_ODR]
-	ORR r1, r1, r3
+	ORR r1, r1, r2
 	STR r1, [r0, #GPIO_ODR]
 	
 	; Set GPIOC input;
