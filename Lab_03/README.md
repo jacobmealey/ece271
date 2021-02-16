@@ -39,9 +39,12 @@ Answers to After-lab Questions
 -------
 
 * Question 1:
+We can use an array of H-Bridges.
 
 
 * Question 2:
+Yes, you can keep adding sequences to the wave, and we can keep doing that until we get
+a pwm output :)
 
 
 Suggestions and Comments
