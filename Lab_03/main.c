@@ -89,8 +89,9 @@ int main(void){
 		}else if(key == 'A'){
 			// Turn Motor Clockwise
 			motor_pos = string_to_int(message, pos);
-			motor_pos = motor_pos * 3; 
-			half_step(1, motor_pos);
+			//motor_pos = motor_pos * 7; 
+			//half_step(1, (motor_pos * 28)/10);
+			full_step(1, (motor_pos * 33)/10);
 		}else if(key == 'B'){	
 			// Turn Motor Counter Clockwis 
 			motor_pos = string_to_int(message, pos); 
@@ -166,11 +167,11 @@ void full_step(int dir, int step){
 				GPIOC->ODR &= ~(GPIO_IDR_IDR_8);
 				GPIOC->ODR &= ~(GPIO_IDR_IDR_6);
 				GPIOC->ODR &= ~(GPIO_IDR_IDR_9);
-				GPIOC->ODR |= ((bits[i]>>3) & 0x1) << 5; // set pin 5 (A) to MSB of bits[i]
-				GPIOC->ODR |= ((bits[i]>>2) & 0x1) << 6; // set pin 6 (~A) to 3rd bit of bits[i]
-				GPIOC->ODR |= ((bits[i]>>1) & 0x1) << 8; // set pin 8 (B) to 2nd bit of bits[i]
-				GPIOC->ODR |= ((bits[i]) & 0x1) << 9; // set pin 9 (~B) to LSB of bits[i]
-				stinky_delay(30000);
+				GPIOC->ODR |= ((bits[i]>>3U) & 0x1) << 5U; // set pin 5 (A) to MSB of bits[i]
+				GPIOC->ODR |= ((bits[i]>>2U) & 0x1) << 6U; // set pin 6 (~A) to 3rd bit of bits[i]
+				GPIOC->ODR |= ((bits[i]>>1U) & 0x1) << 8U; // set pin 8 (B) to 2nd bit of bits[i]
+				GPIOC->ODR |= ((bits[i]) & 0x1) << 9U; // set pin 9 (~B) to LSB of bits[i]
+				stinky_delay(60000);
 			}
 		}
 	}else if(!dir){
@@ -181,11 +182,11 @@ void full_step(int dir, int step){
 				GPIOC->ODR &= ~(GPIO_IDR_IDR_8);
 				GPIOC->ODR &= ~(GPIO_IDR_IDR_6);
 				GPIOC->ODR &= ~(GPIO_IDR_IDR_9);
-				GPIOC->ODR |= ((bits[i]>>3) & 0x1) << 5; // set pin 5 (A) to MSB of bits[i]
-				GPIOC->ODR |= ((bits[i]>>2) & 0x1) << 6; // set pin 6 (~A) to 3rd bit of bits[i]
-				GPIOC->ODR |= ((bits[i]>>1) & 0x1) << 8; // set pin 8 (B) to 2nd bit of bits[i]
-				GPIOC->ODR |= ((bits[i]) & 0x1) << 9; // set pin 9 (~B) to LSB of bits[i]
-				stinky_delay(30000);
+				GPIOC->ODR |= ((bits[i]>>3U) & 0x1) << 5U; // set pin 5 (A) to MSB of bits[i]
+				GPIOC->ODR |= ((bits[i]>>2U) & 0x1) << 6U; // set pin 6 (~A) to 3rd bit of bits[i]
+				GPIOC->ODR |= ((bits[i]>>1U) & 0x1) << 8U; // set pin 8 (B) to 2nd bit of bits[i]
+				GPIOC->ODR |= ((bits[i]) & 0x1) << 9U; // set pin 9 (~B) to LSB of bits[i]
+				stinky_delay(60000);
 			}
 		}
 	}
