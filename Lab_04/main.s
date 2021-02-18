@@ -57,12 +57,14 @@ while
 	LDR r2, [r0, #GPIO_IDR]
 	; shift to LED location
 	LSR r2, r2, #BUTTON_PIN
-
-	
-	LDR r0, =GPIOA_BASE
-	LDR r1, [r0, #GPIO_ODR]
-	EOR r1, r3, r2
-	STR r1, [r0, #GPIO_ODR]
+	CMP r2,  #(0x01)
+	BEQ endif
+then
+		LDR r0, =GPIOA_BASE
+		LDR r1, [r0, #GPIO_ODR]
+		EOR r1, r1, #(1<<LED_PIN)
+		STR r1, [r0, #GPIO_ODR]
+endif
 	MOV r2, r3
 	B while
   
