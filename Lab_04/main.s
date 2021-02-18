@@ -35,6 +35,7 @@ __main	PROC
 	ORR r1, r1, #RCC_AHB2ENR_GPIOCEN
 	STR r1, [r0, #RCC_AHB2ENR]
 	
+while
 	; MODE: 00: Input mode, 01: General purpose output mode
     ;       10: Alternate function mode, 11: Analog mode (reset state)
 	LDR r0, =GPIOA_BASE
@@ -43,23 +44,27 @@ __main	PROC
     ORR r1, r1, #(1<<(2*LED_PIN))
 	STR r1, [r0, #GPIO_MODER]
 	
-	LDR r1, [r0, #GPIO_ODR]
-	ORR r1, r1, r2
-	STR r1, [r0, #GPIO_ODR]
-	
 	; Set GPIOC input;
 	LDR r0, =GPIOC_BASE
 	LDR r1, [r0, #GPIO_MODER]
 	EOR r1, r0, #(3 << (2 * BUTTON_PIN))
 	AND r1, r0, #(~(3 << (2 * BUTTON_PIN)))
-	LDR r2, [r0, #GPIO_IDR]
-	LSR r2, r2, BUTTON_PIN
-	LSL r2, r2, LED_PIN
-	;ORR r3, r2, #(0x2000)
-	;STR r3, [r0, #(GPIO_IDR+BUTTON_PIN)]
 	STR r1, [r0, #GPIO_MODER]
 	
-	B __main
+ 	
+	LDR r0, =GPIOC_BASE
+	; Get button pin 
+	LDR r2, [r0, #GPIO_IDR]
+	; shift to LED location
+	LSR r2, r2, #BUTTON_PIN
+
+	
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	EOR r1, r3, r2
+	STR r1, [r0, #GPIO_ODR]
+	MOV r2, r3
+	B while
   
 stop 	B 		stop     		; dead loop & program hangs here
 
