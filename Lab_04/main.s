@@ -35,7 +35,7 @@ __main	PROC
 	ORR r1, r1, #RCC_AHB2ENR_GPIOCEN
 	STR r1, [r0, #RCC_AHB2ENR]
 	
-while
+
 	; MODE: 00: Input mode, 01: General purpose output mode
     ;       10: Alternate function mode, 11: Analog mode (reset state)
 	LDR r0, =GPIOA_BASE
@@ -50,23 +50,28 @@ while
 	EOR r1, r0, #(3 << (2 * BUTTON_PIN))
 	AND r1, r0, #(~(3 << (2 * BUTTON_PIN)))
 	STR r1, [r0, #GPIO_MODER]
-	
- 	
-	LDR r0, =GPIOC_BASE
-	; Get button pin 
-	LDR r2, [r0, #GPIO_IDR]
+
+while
+
+	LDR r0, =GPIOC_BASE			; Go to GPIOC
+	; Get button pin 			
+	LDR r2, [r0, #GPIO_IDR] 	; setup r2 as GPIOC->IDR
 	; shift to LED location
-	LSR r2, r2, #BUTTON_PIN
-	CMP r2,  #(0x01)
-	BEQ endif
-then
-		LDR r0, =GPIOA_BASE
-		LDR r1, [r0, #GPIO_ODR]
-		EOR r1, r1, #(1<<LED_PIN)
-		STR r1, [r0, #GPIO_ODR]
-endif
-	MOV r2, r3
+	LSR r2, r2, #BUTTON_PIN		; set r2 to have first bit be button value
+
+	
+	CMP r2, #(0x01)				; check if button is pressed	
+	BNE LEDTOGGLE				; if they aren't equal go to LED
+	B while					; else go to beginnging of loop
+
+LEDTOGGLE ; toggle LED and delay (with loop)
+	LDR r0, =GPIOA_BASE
+	LDR r1, [r0, #GPIO_ODR]
+	EOR r1, r1, #(1<<LED_PIN)
+	STR r1, [r0, #GPIO_ODR]
 	B while
+  
+  
   
 stop 	B 		stop     		; dead loop & program hangs here
 
