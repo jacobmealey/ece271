@@ -56,36 +56,33 @@ __main	PROC
 	MOV r7, #0					; Current duty cycle
 WHILE
 	; -------------	PWM IN ASSEMBLY	--------------------- 		
-;	ADD r7, r7, #1				; Add 1 to current duty cycle
-;	CMP r7, r8					; Are we at max duty cycle?
-;	MOVEQ r7, #1				; if we are reset to 0
+	ADD r7, r7, #1				; Add 1 to current duty cycle
+	CMP r7, r8					; Are we at max duty cycle?
+	MOVEQ r7, #1				; if we are reset to 0
 		
-;	MOV r0, #50			
-;	MUL r0, r0, r7				; Multiply r0 by the duty cycle
+	MOV r0, #50			
+	MUL r0, r0, r7				; Multiply r0 by the duty cycle
 
-;	BL DELAY					; Pass r0 to delay to dead loop that many ticks
-;	BL LED_OFF
+	BL DELAY					; Pass r0 to delay to dead loop that many ticks
+	BL LED_OFF
 
-;	SUB r9, r8, r7				; Subtract the current duty cycle from the max duty
-;	MOV r0, #50					; cycle to give time low.
-;	MUL r0, r9, r9
+	SUB r9, r8, r7				; Subtract the current duty cycle from the max duty
+	MOV r0, #50					; cycle to give time low.
+	MUL r0, r9, r9
 
-;	BL DELAY					; r0 is passed to delay
-;	BL LED_ON
+	BL DELAY					; r0 is passed to delay
+	BL LED_ON
 	
 	
-	LDR r0, =GPIOC_BASE			; Go to GPIOC
+;	LDR r0, =GPIOC_BASE			; Go to GPIOC
 	; Get button pin 			
-	LDR r2, [r0, #GPIO_IDR] 	; setup r2 as GPIOC->IDR
+;	LDR r2, [r0, #GPIO_IDR] 	; setup r2 as GPIOC->IDR
 	; shift to LED location
-	LSR r2, r2, #BUTTON_PIN		; set r2 to have first bit be button value
+;	LSR r2, r2, #BUTTON_PIN		; set r2 to have first bit be button value
 
-	
-	
-	
-	CMP r2, #(0x01)				; check if button is pressed	
-	BEQ WHILE
-	BL LED_TOGGLE
+;	CMP r2, #(0x01)				; check if button is pressed	
+;	BEQ WHILE
+;	BL LED_TOGGLE
 						; if they aren't equal go to LED
 ;	B WHILE						; else go to beginnging of loop
 
