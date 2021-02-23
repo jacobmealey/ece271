@@ -7,9 +7,9 @@ Your Name:
 Lab Status
 -------
 Answer the following questions by put a "x" in the bracket.
-- Yes [], No []: Complete pre-lab
-- Yes [], No []: Complete basic lab requirements
-- Yes [], No []: Complete something cool
+- Yes [x], No []: Complete pre-lab
+- Yes [x], No []: Complete basic lab requirements
+- Yes [x], No []: Complete something cool
   - If you have completed something cool, give it a short summary below: 
 
 
@@ -27,10 +27,11 @@ Answers to After-lab Questions
 -------
 
 * Question 1:
-
+MOV only moves 8 bit values.
 
 * Question 2:
-
+IF the value doesn't fit, then you will get errors and it will be sad :( 
+to get around it you can move specific sections with MOVT and MOVW, to move half words to the bottom and top of a 32 bit section. 
 
 Suggestions and Comments
 -------
