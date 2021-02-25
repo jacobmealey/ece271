@@ -33,31 +33,87 @@ __main	PROC
     ; Enable the clock to GPIO Port A	
 	LDR r0, =RCC_BASE
 	LDR r1, [r0, #RCC_AHB2ENR]
-	ORR r1, r1, #RCC_AHB2ENR_GPIOAEN
+	ORR r1, r1, #RCC_AHB2ENR_GPIOCEN
 	STR r1, [r0, #RCC_AHB2ENR]
 	
 	; MODE: 00: Input mode, 01: General purpose output mode
     ;       10: Alternate function mode, 11: Analog mode (reset state)
 	LDR r0, =GPIOC_BASE
 	LDR r1, [r0, #GPIO_MODER]
-	EOR r1, r1, #(3<<(2*MOTOR_A_PIN))
+	AND r1, r1, #(~(3<<(2*MOTOR_A_PIN)))
 	ORR r1, r1, #(1<<(2*MOTOR_A_PIN))
-	EOR r1, r1, #(3<<(2*MOTOR_NA_PIN))
+	AND r1, r1, #(~(3<<(2*MOTOR_NA_PIN)))
 	ORR r1, r1, #(1<<(2*MOTOR_NA_PIN))
-	EOR r1, r1, #(3<<(2*MOTOR_B_PIN))
+	AND r1, r1, #(~(3<<(2*MOTOR_B_PIN)))
 	ORR r1, r1, #(1<<(2*MOTOR_B_PIN))
-	EOR r1, r1, #(3<<(2*MOTOR_NB_PIN))
+	AND r1, r1, #(~(3<<(2*MOTOR_NB_PIN)))
 	ORR r1, r1, #(1<<(2*MOTOR_NB_PIN))
 	STR r1, [r0, #GPIO_MODER]
-	
-	MOV r4, #0x56A9
 
+	
+	MOV r4, #0x56A9				; Each hex digit is 1 sequence in the halfstep
+	MOV r5, #0 					; the current 4 bit section to look at
+								; this will be used for shifting
+	
+MOTOR_LOOP						; Start motor loop
+	LDR r0, =GPIOC_BASE
+	LDR r1, [r0, #GPIO_ODR]
+
+	LSR r6, r4, r5				; Shift four over r5 amount of bits 
+	AND r6, r6, #0xF			; Mask so we only get the first 4 bits :)
+	
+	ADD r5, r5, #4				; increment r5 
+	CMP r5, #16
+	MOVEQ r5, #0
+	
+	;AND r7, 
+	AND r1, r1, #~(1<< MOTOR_A_PIN)
+	AND r1, r1, #~(1<< MOTOR_NA_PIN)
+	AND r1, r1, #~(1<< MOTOR_B_PIN)
+	AND r1, r1, #~(1<< MOTOR_NB_PIN)
+	STR r1, [r0, #GPIO_ODR]
+	
+	
+	LSR r7, r6, #3
+	AND r7, r7, #0x1
+	LSL r7, r7, #MOTOR_A_PIN
+	ORR r1, r1, r7
+	
+	LSR r7, r6, #2
+	AND r7, r7, #0x1
+	LSL r7, r7, #MOTOR_NA_PIN
+	ORR r1, r1, r7
+	
+	LSR r7, r6, #1
+	AND r7, r7, #0x1
+	LSL r7, r7, #MOTOR_B_PIN
+	ORR r1, r1, r7
+	
+	AND r7, r7, #0x1
+	LSL r7, r7, #MOTOR_NB_PIN
+	ORR r1, r1, r7
+	
+	STR r1, [r0, #GPIO_ODR]
+	
+	MOV r0, #(1<<12)
+	BL DELAY
+	
+	B MOTOR_LOOP
 	
   
 stop 	B 		stop     		; dead loop & program hangs here
 
 	ENDP
-					
+				
+DELAY PROC
+		MOV r6, #0 				; Set r6 zero
+WHILE_DELAY 					; While r6 does not equal r0 
+		ADD r6, r6, #1			; Increment r6
+		CMP r0, r6
+		BNE WHILE_DELAY
+ 	BX lr						; return to main
+	ENDP
+		
 	ALIGN			
 
 	AREA    myData, DATA, READWRITE

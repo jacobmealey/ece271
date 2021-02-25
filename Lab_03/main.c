@@ -74,44 +74,8 @@ int main(void){
 	motor_pos = 0;
 	while(1){
 		
-		key = keypad_scan();
-		if(pos > 6){
-				clear_str(message, &pos);
-		}else if(key == '#' && pos > 0){
-			// Delete Most Recent Number
-			pos--;
-			message[pos] = ' ';
-		}else if(key == 'C'){
-			// Reset Position
-			motor_pos = 0;
-			clear_str(message, &pos);
-			message[pos] = ' ';
-		}else if(key == 'A'){
-			// Turn Motor Clockwise
-			motor_pos = string_to_int(message, pos);
-			//motor_pos = motor_pos * 7; 
-			//half_step(1, (motor_pos * 28)/10);
-			full_step(1, (motor_pos * 33)/10);
-		}else if(key == 'B'){	
-			// Turn Motor Counter Clockwis 
-			motor_pos = string_to_int(message, pos); 
-			motor_pos = motor_pos * 3;
-			half_step(0, motor_pos);
-		}else if(key == 'B' || key == 'D' || key == '*'){
-			 // Do nothing
-		}else if(key != 0xFF){
-			message[pos] =  key;
-			message[pos + 1] = '\0';
-			pos++;
-		}
-		
-		ssd1306_SetCursor(2,0);
-		ssd1306_WriteString(message, Font_11x18, White);
-		ssd1306_UpdateScreen();	
-		//stinky_delay(10000);
-		
-		///half_step(1, 10);
-		//stinky_delay(10000);
+		half_step(1, 100);
+		stinky_delay(100);
 	}	 // Deadloop
 }
 
