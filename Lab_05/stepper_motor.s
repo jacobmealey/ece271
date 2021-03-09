@@ -27,13 +27,13 @@ INIT_STEPPER PROC
     ;       10: Alternate function mode, 11: Analog mode (reset state)
 	LDR r0, =GPIOC_BASE
 	LDR r1, [r0, #GPIO_MODER]
-	AND r1, r1, #(~(3<<(2*MOTOR_A_PIN)))
+	AND r1, r1, #(~(3<<(2*MOTOR_A_PIN)))	; Set Motor Pin A
 	ORR r1, r1, #(1<<(2*MOTOR_A_PIN))
-	AND r1, r1, #(~(3<<(2*MOTOR_NA_PIN)))
+	AND r1, r1, #(~(3<<(2*MOTOR_NA_PIN)))	; Set Motor Pin ~A
 	ORR r1, r1, #(1<<(2*MOTOR_NA_PIN))
-	AND r1, r1, #(~(3<<(2*MOTOR_B_PIN)))
+	AND r1, r1, #(~(3<<(2*MOTOR_B_PIN)))	; Set Motor Pin B
 	ORR r1, r1, #(1<<(2*MOTOR_B_PIN))
-	AND r1, r1, #(~(3<<(2*MOTOR_NB_PIN)))
+	AND r1, r1, #(~(3<<(2*MOTOR_NB_PIN)))	; Set Motor Pin ~B
 	ORR r1, r1, #(1<<(2*MOTOR_NB_PIN))
 	STR r1, [r0, #GPIO_MODER]
 	BX lr
@@ -43,6 +43,8 @@ INIT_STEPPER PROC
 ; (through r0) this is the amount of steps to take - note 
 ; that it is steps and not degrees, your calling code 
 ; should handle that.
+; FULL_STEP complete rotation in 2048 steps.
+; HALF_STEP complete rotation in 4096 steps.
 FULL_STEP PROC
 	MOV r4, #0x56A9				; Each hex digit is 1 sequence in the fullstep
 	MOV r5, #0 					; the current 4 bit section to look at

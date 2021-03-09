@@ -28,7 +28,8 @@ MOTOR_NB_PIN EQU 9
 	AREA    main, CODE, READONLY
 	EXPORT	__main				; make __main visible to linker
 	ENTRY			
-				
+;---------------------------------------------------
+; Main Function
 __main	PROC
 		
 	BL INIT_STEPPER
@@ -38,7 +39,7 @@ WHILE
 stop B stop
 
 	ENDP
-
+;---------------------------------------------------
 		
 	ALIGN			
 

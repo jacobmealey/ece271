@@ -5,7 +5,9 @@
 
 	EXPORT DELAY
 
-								; Delay is done as dead loop of some many ticks
+; DELAY takes exactly one argument and that is how many
+; 'ticks' you want to wait for. the delay function uses
+; CPU time for the entire delay. 
 DELAY PROC
 	PUSH {r6}
 	MOV r6, #0 					; Set r6 zero
