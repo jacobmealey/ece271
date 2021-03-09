@@ -16,8 +16,8 @@
 
 	INCLUDE core_cm4_constants.s		; Load Constant Definitions
 	INCLUDE stm32l476xx_constants.s      
-	IMPORT INIT_STEPPER
-	IMPORT HALF_STEP
+	IMPORT INIT_STEPPER					; stepper_motor.s
+	IMPORT HALF_STEP					; stepper_motor.s
 ; Green LED <--> PA.5
 LED_PIN	EQU	5
 MOTOR_A_PIN EQU 5
