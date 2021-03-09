@@ -30,12 +30,20 @@ MOTOR_NB_PIN EQU 9
 				
 __main	PROC
 		
-    ; Enable the clock to GPIO Port A	
+	BL INIT_STEPPER
+WHILE 
+	MOV r0, #1000
+	BL HALF_STEP
+stop B stop
+
+	ENDP
+INIT_STEPPER PROC
+	; Enable the clock to GPIO Port A	
 	LDR r0, =RCC_BASE
 	LDR r1, [r0, #RCC_AHB2ENR]
 	ORR r1, r1, #RCC_AHB2ENR_GPIOCEN
 	STR r1, [r0, #RCC_AHB2ENR]
-	
+
 	; MODE: 00: Input mode, 01: General purpose output mode
     ;       10: Alternate function mode, 11: Analog mode (reset state)
 	LDR r0, =GPIOC_BASE
@@ -49,15 +57,9 @@ __main	PROC
 	AND r1, r1, #(~(3<<(2*MOTOR_NB_PIN)))
 	ORR r1, r1, #(1<<(2*MOTOR_NB_PIN))
 	STR r1, [r0, #GPIO_MODER]
-
-	
-WHILE 
-	MOV r0, #1000
-	BL HALF_STEP
-stop B stop
-
-	ENDP
-
+	BX lr
+	endp
+		
 FULL_STEP PROC
 	MOV r4, #0x56A9				; Each hex digit is 1 sequence in the fullstep
 	MOV r5, #0 					; the current 4 bit section to look at
