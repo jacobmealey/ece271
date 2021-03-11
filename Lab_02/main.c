@@ -70,30 +70,32 @@ int main(void){
 
 	ssd1306_Init();
 	ssd1306_Fill(Black);
-	while(1){
-		key = keypad_scan();
-		// We only want to display 6 characters
-		if(pos > 6){
-			for(pos = 0; pos < 7; pos++){
-				message[pos] = ' ';
-			}
-			pos = 0;
-		// Check if not a special key or blank
-		}else if(key != 0xFF && key != '#'){
-			message[pos] =  key;
-			message[pos + 1] = '\0';
-			pos++;
-		// Delete characters if key is '#'
-		}else if(key == '#' && pos > 0){
-			pos--;
-			message[pos] = ' ';
-		}
-		
-		// Update Screen
-		ssd1306_SetCursor(2,0);
-		ssd1306_WriteString(message, Font_11x18, White);
-		ssd1306_UpdateScreen();	
-	}	 
+	ssd1306_DrawArc(64, 32, 15, 0, 180, White);
+	ssd1306_UpdateScreen();
+//	while(1){
+//		key = keypad_scan();
+//		// We only want to display 6 characters
+//		if(pos > 6){
+//			for(pos = 0; pos < 7; pos++){
+//				message[pos] = ' ';
+//			}
+//			pos = 0;
+//		// Check if not a special key or blank
+//		}else if(key != 0xFF && key != '#'){
+//			message[pos] =  key;
+//			message[pos + 1] = '\0';
+//			pos++;
+//		// Delete characters if key is '#'
+//		}else if(key == '#' && pos > 0){
+//			pos--;
+//			message[pos] = ' ';
+//		}
+//		
+//		// Update Screen
+//		ssd1306_SetCursor(2,0);
+//		ssd1306_WriteString(message, Font_11x18, White);
+//		ssd1306_UpdateScreen();	
+//	}	 
 }
 
 // Configure I2C1_SCL (PB8) Pin as : Alternate function, High Speed, Open drain, Pull up 

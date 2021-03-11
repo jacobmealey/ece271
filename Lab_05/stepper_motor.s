@@ -7,8 +7,7 @@
 	EXPORT INIT_STEPPER
 	EXPORT FULL_STEP
 	EXPORT HALF_STEP
-; Green LED <--> PA.5
-LED_PIN	EQU	5
+
 MOTOR_A_PIN EQU 5
 MOTOR_NA_PIN EQU 6
 MOTOR_B_PIN EQU 8
@@ -112,7 +111,7 @@ FS_MOTOR_LOOP						; Start motor loop
 ; This function works exactly the same as FULL_STEP
 ; so it is not as heavely commented
 HALF_STEP PROC
-
+	PUSH {r4 - r7, lr}
 	; MOV r4 #0x2A891546			; Each hex digit is 1 sequence in the fullstep
 	MOV r4, #(0x2A << 24)			; Each hex digit is 1 sequence in the fullstep
 	ORR r4, #(0x89 << 16)
@@ -165,7 +164,7 @@ HS_MOTOR_LOOP						; Start motor loop
 	
 	STR r1, [r0, #GPIO_ODR]
 	
-	MOV r0, #(1<<10)
+	MOV r0, #(1<<15)
 	BL DELAY
 	
 	ADD r10, r10, #1
@@ -179,7 +178,8 @@ HS_MOTOR_LOOP						; Start motor loop
 	AND r1, r1, #~(1<< MOTOR_B_PIN)
 	AND r1, r1, #~(1<< MOTOR_NB_PIN)
 	STR r1, [r0, #GPIO_ODR]
+	POP {r4-r7, pc}
 	BX lr
 	ENDP
 
-END
+	END

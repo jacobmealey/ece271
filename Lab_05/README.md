@@ -18,18 +18,29 @@ Answers to Pre-lab Questions
 This part is required only if you are requested to write your answers here. 
 
 * Question 1:
+BL
 
 
 * Question 2:
+BX 
+
+* Question 3:
+r0
+
+* Questoin 4: 
+you must push it to the stack
 
 
 Answers to After-lab Questions
 -------
 
 * Question 1:
+An ABI is helpful because you can have standards, so you know what registers  *should* be 
+preserved and it also makes combining with C easier
 
 
 * Question 2:
+It makes it easier to address them as well as faster.?
 
 
 Suggestions and Comments

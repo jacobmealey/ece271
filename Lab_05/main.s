@@ -18,23 +18,42 @@
 	INCLUDE stm32l476xx_constants.s      
 	IMPORT INIT_STEPPER					; stepper_motor.s
 	IMPORT HALF_STEP					; stepper_motor.s
-; Green LED <--> PA.5
-LED_PIN	EQU	5
-MOTOR_A_PIN EQU 5
-MOTOR_NA_PIN EQU 6
-MOTOR_B_PIN EQU 8
-MOTOR_NB_PIN EQU 9
+	IMPORT System_Clock_Init
+	IMPORT I2C_GPIO_init
+	IMPORT ssd1306_Init
+	IMPORT ssd1306_Fill
+	IMPORT ssd1306_WriteChar
+	IMPORT ssd1306_UpdateScreen
+	IMPORT simple_arc
 	
 	AREA    main, CODE, READONLY
 	EXPORT	__main				; make __main visible to linker
 	ENTRY			
+
+
 ;---------------------------------------------------
 ; Main Function
 __main	PROC
-		
-	BL INIT_STEPPER
-WHILE 
-	MOV r0, #1000
+	BL System_Clock_Init
+;	BL I2C_GPIO_init
+;	BL ssd1306_Init
+;	MOV r0, #0x00
+;	BL ssd1306_Fill
+	BL INIT_STEPPER 			; Uses PC.5, PC.6, PC.8 and PC.9
+;	MOV r3, #0
+;	
+;WHILE_MAIN
+;	CMP r3, #360
+;	MOVEQ r3, #0
+;	ADD r3, r3, #1
+;	MOV r0, r3
+;	BL simple_arc
+;	MOV r0, #2
+;	MOV r1, #12
+;	MUL r0, r0, r1
+;	BL HALF_STEP
+;	B WHILE_MAIN
+	MOV r0, #4096
 	BL HALF_STEP
 stop B stop
 
