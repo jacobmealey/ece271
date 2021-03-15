@@ -8,7 +8,7 @@ double cycle;
 double cycle_increment;
 int state = 0;
 // User HSI (high-speed internal) as the processor clock
-
+int TimeDelay = 0;
 
 void configure_LED_pin(){
   // Enable the clock to GPIO Port A	
@@ -46,8 +46,38 @@ void toggle_LED(){
 
 
 
-int main(void){
+
+void SysTick_Initialize(uint32_t ticks){
+	SysTick->CTRL = 0;
+	SysTick->LOAD = ticks - 1;
 	
-	while(1);
+	NVIC_SetPriority(SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
+	
+	SysTick->VAL = 0;
+	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;
+	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
+	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
+}
+
+void SysTick_Handler(void){
+	if(TimeDelay > 0)
+		TimeDelay--;
+}
+
+void Delay(uint32_t nTime){
+	TimeDelay = nTime;
+	while(TimeDelay != 0);
+}
+
+int main(void){
+	// I want the delay to work in milliseconds
+	// so 4MHz -> 4000 ticks persec
+	SysTick_Initialize(4000);
+	configure_LED_pin();
+	turn_off_LED();
+	while(1){
+		toggle_LED();
+		Delay(1000);
+	}
 	
 }
