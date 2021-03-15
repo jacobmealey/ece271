@@ -18,6 +18,7 @@
 	INCLUDE stm32l476xx_constants.s      
 	IMPORT INIT_STEPPER					; stepper_motor.s
 	IMPORT HALF_STEP					; stepper_motor.s
+	IMPORT FULL_STEP
 	IMPORT System_Clock_Init
 	IMPORT I2C_GPIO_init
 	IMPORT ssd1306_Init
@@ -35,26 +36,24 @@
 ; Main Function
 __main	PROC
 	BL System_Clock_Init
-;	BL I2C_GPIO_init
-;	BL ssd1306_Init
-;	MOV r0, #0x00
-;	BL ssd1306_Fill
+	BL I2C_GPIO_init
+	BL ssd1306_Init
+	MOV r0, #0x00
+	BL ssd1306_Fill
 	BL INIT_STEPPER 			; Uses PC.5, PC.6, PC.8 and PC.9
-;	MOV r3, #0
-;	
-;WHILE_MAIN
-;	CMP r3, #360
-;	MOVEQ r3, #0
-;	ADD r3, r3, #1
-;	MOV r0, r3
-;	BL simple_arc
-;	MOV r0, #2
-;	MOV r1, #12
-;	MUL r0, r0, r1
-;	BL HALF_STEP
-;	B WHILE_MAIN
-	MOV r0, #4096
+	MOV r3, #0
+	
+WHILE_MAIN
+	CMP r3, #360
+	MOVEQ r3, #0
+	ADD r3, r3, #1
+	MOV r0, r3
+	BL simple_arc
+	MOV r0, #2
+	MOV r1, #12
+	MUL r0, r0, r1
 	BL HALF_STEP
+	B WHILE_MAIN
 stop B stop
 
 	ENDP

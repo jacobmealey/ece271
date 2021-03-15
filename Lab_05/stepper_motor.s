@@ -91,7 +91,7 @@ FS_MOTOR_LOOP						; Start motor loop
 	
 	STR r1, [r0, #GPIO_ODR]
 	
-	MOV r0, #(1<<11)
+	MOV r0, #(1<<15)
 	BL DELAY
 	
 	ADD r10, r10, #1
