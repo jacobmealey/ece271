@@ -14,7 +14,8 @@ int state = 0;
 // User HSI (high-speed internal) as the processor clock
 int TimeDelay = 0;
 //int total_time; // Time ellapsed in ms
-uint8_t active = 1;
+static uint8_t  active;
+int time_mseconds = 0;
 
 void configure_GPIO(){
   // Enable the clock to GPIO Port A	
@@ -88,6 +89,9 @@ void SysTick_Initialize(uint32_t ticks){
 }
 
 void SysTick_Handler(void){
+	if(!active){
+		time_mseconds += 1;
+	}
 	if(TimeDelay > 0)
 		TimeDelay--;
 }
@@ -98,9 +102,9 @@ void Delay(uint32_t nTime){
 }
 
 void time(int t_time, int *mins, int *secs){
-	t_time /= 1000; // Convert to seconds
-	*mins = t_time / 60;
-	*secs = t_time % 60;
+	int temp_time =  t_time / 1000; // Convert to seconds
+	*mins = temp_time / 60;
+	*secs = temp_time % 60;
 }
 
 
@@ -128,36 +132,52 @@ void int_to_string(int num, char *string){
 int main(void){
 	// I want the delay to work in milliseconds
 	// so 4MHz -> 4000 ticks persec
-	int minutes = 0, seconds = 0, time_mseconds = 0;
+	int minutes = 0, seconds = 0;
 	char time_string[5];
-	SysTick_Initialize(80000);
-	System_Clock_Init();
-	I2C_GPIO_init();
+	active = 0;
+	
+	
+	System_Clock_Init(); 				// this function sets the clock to 80Mhz from the i2c
+	SysTick_Initialize(80000);	// set the interupts to trigger every 80000 Ticks (once every ms)
+	I2C_GPIO_init();					
 	ssd1306_Init();
-	ssd1306_Fill(Black);
-  EXTI_Init();
+	EXTI_Init();								// Enable EXTI to stop and start the timer.
 	configure_GPIO();
-	turn_off_LED();
+	
+	ssd1306_Fill(Black);
+	time_mseconds = 0;
+
 	while(1){
-		toggle_LED();
+		// Something Cool
+		// this section is kind of intense.  but basically
+		// It just gets the times from variables and writes it
+		// as mm:ss.xxxx (minutes, seconds, miliseconds)
 		time(time_mseconds, &minutes, &seconds);
 		ssd1306_SetCursor(0, 2);
+		// Write Minutes
 		if(minutes < 10){
 			ssd1306_WriteChar('0', Font_6x8, White);
 		}
 		int_to_string(minutes, time_string);
 		ssd1306_WriteString(time_string, Font_6x8, White);
+		
 		ssd1306_WriteChar(':', Font_6x8, White);
+		// Write Seconds
 		if(seconds < 10){
 			ssd1306_WriteChar('0', Font_6x8, White);
 		}
 		int_to_string(seconds, time_string);
 		ssd1306_WriteString(time_string, Font_6x8, White);
+		ssd1306_WriteChar('.', Font_6x8, White);
+		
+		//Milliseconds
+	  int_to_string(time_mseconds % 1000, time_string);
+		ssd1306_WriteString(time_string, Font_6x8, White);
 		ssd1306_UpdateScreen();
-		// Delay 1000ms -> 1 seocnd
-		Delay(1000);
-		if(active)
-			time_mseconds += 1000;
+
+// 	Lab Demo
+//		toggle_LED();
+//		Delay(1000);
 	}
 	
 }
