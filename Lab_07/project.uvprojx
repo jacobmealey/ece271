@@ -403,6 +403,36 @@
               <FileType>5</FileType>
               <FilePath>.\README.md</FilePath>
             </File>
+            <File>
+              <FileName>I2C.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\I2C.c</FilePath>
+            </File>
+            <File>
+              <FileName>I2C_gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\I2C_gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>ssd1306.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ssd1306.c</FilePath>
+            </File>
+            <File>
+              <FileName>ssd1306_fonts.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ssd1306_fonts.c</FilePath>
+            </File>
+            <File>
+              <FileName>ssd1306_tests.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ssd1306_tests.c</FilePath>
+            </File>
+            <File>
+              <FileName>SysClock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\SysClock.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
