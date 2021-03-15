@@ -105,15 +105,18 @@ int main(void){
   // Dead loop & program hangs here
 	EXTI_Init();
 	turn_on_LED();
-
 	while(1){
-		int_to_string(total_presses, str),
 		ssd1306_SetCursor(0, 2);
 		ssd1306_WriteString("Pressed ", Font_6x8, White);
-		ssd1306_WriteString(str, Font_6x8, White);
+		if(total_presses){
+			ssd1306_WriteString(str, Font_6x8, White);
+		}else{
+			ssd1306_WriteString("0", Font_6x8, White);
+		}
 		ssd1306_WriteString(" Times.", Font_6x8, White);
 		ssd1306_UpdateScreen();
-	};
+		int_to_string(total_presses, str);
+	}
 }
 
 void int_to_string(int num, char *string){
