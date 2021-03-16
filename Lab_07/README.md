@@ -18,27 +18,22 @@ Answers to Pre-lab Questions
 This part is required only if you are requested to write your answers here. 
 
 * Question 1:
-b Mask = 0x10 Value = 0x05
-c Mask = 0x11 Valye = 0x05
+MSIRANGE for 8MHz is b0111 as found on page 225 of reference manua;
 * Question 2:
-a Mask 0x00 Value = 0x0D
-b Mask 0x01 Value = 0x00
+125 us
 
 Answers to After-lab Questions
 -------
 
 * Question 1:
-the hardware debounce is small RC circuit, that adds a slight delay as well as "absorbs" other potential small pushes in the discharge of the capacitor
-
+Since its not enabled by default it has no position, but it does have a default address of 
+0x0000 003C
 * Question 2:
-The way I do it is I add a small delay after the button is pushed, this allows time for other potential "bounces" from being detected.
-
+Defalt priority is 6, a higher priority means LOWER urgency
 * Question 3:
-
+No, you have to enable systick
 * Question 4:
-Low speed is good for LEDs because first of all, the human eye can't tell the difference between a 10mHz led and an 80mHz, so why waste energy on keeping an
-LED lit if we can't see the difference between them? 
-Suggestions and Comments
+??
 -------
 
 * Do you have comments or suggestions for the lab and course?

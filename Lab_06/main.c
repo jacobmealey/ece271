@@ -68,9 +68,10 @@ void toggle_LED(){
 	GPIOA->ODR ^= (1 << LED_PIN);
 }
 
-// This isn't the best way to do a delay, but time is of
-// the essence, so here we are.  
+
+
 void EXTI15_10_IRQHandler(void){
+	// Check to make sure its the right pin
 	if((EXTI->PR1 & EXTI_PR1_PIF13) == EXTI_PR1_PIF13){
 		toggle_LED();
 		total_presses++;
@@ -78,7 +79,7 @@ void EXTI15_10_IRQHandler(void){
 	}
 }
 
-
+// Enables the EXIT for pin pc.13
 void EXTI_Init(void) {
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 	//NVIC->ISER[1] = 1 << 8;
