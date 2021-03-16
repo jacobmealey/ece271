@@ -18,7 +18,7 @@ Answers to Pre-lab Questions
 This part is required only if you are requested to write your answers here. 
 
 * Question 1:
-MSIRANGE for 8MHz is b0111 as found on page 225 of reference manua;
+MSIRANGE for 8MHz is b0111 -> 7  as found on page 225 of reference manua;
 * Question 2:
 125 us
 
@@ -26,14 +26,13 @@ Answers to After-lab Questions
 -------
 
 * Question 1:
-Since its not enabled by default it has no position, but it does have a default address of 
-0x0000 003C
+-1
 * Question 2:
 Defalt priority is 6, a higher priority means LOWER urgency
 * Question 3:
 No, you have to enable systick
 * Question 4:
-??
+at 16 mHz would be around 1s, because the max interval is 16,777,215 and that over 16mHz is ~1
 -------
 
 * Do you have comments or suggestions for the lab and course?
