@@ -15,7 +15,6 @@ void enable_HSI (void);
 void gpio_init (void);
 
 int main(void){
-	int i = 0;
 	uint32_t adc_in = 0;
 	enable_HSI();
 	enable_ADC();
@@ -23,17 +22,14 @@ int main(void){
 	gpio_init();
 	while(1){
 		ADC1->CR |= ADC_CR_ADSTART;
-		while((ADC123_COMMON->CSR & ADC_CSR_EOC_MST));
+		while((ADC123_COMMON->CSR & ADC_CSR_EOC_MST) != ADC_CSR_EOC_MST);
 		//GPIOA->ODR |= (1 << LED_PIN);
 		adc_in = ADC1->DR;
 		if((adc_in) < 0x7000){
-						GPIOA->ODR &= ~(1 << LED_PIN);
-
+			GPIOA->ODR &= ~(1 << LED_PIN);
 		}else{
-						GPIOA->ODR |= 1 << LED_PIN;
-
+			GPIOA->ODR |= 1 << LED_PIN;
 		}
-		for(i = 0; i < 10000; i++);
 	}
 }
 
