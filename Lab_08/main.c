@@ -8,6 +8,8 @@ double cycle;
 double cycle_increment;
 int state = 0;
 int TimeDelay = 0;
+volatile int wiper_speed;
+volatile int is_wiping;
 // User HSI (high-speed internal) as the processor clock
 void enable_HSI(){
 	// Enable High Speed Internal Clock (HSI = 16 MHz)
@@ -24,6 +26,37 @@ void enable_HSI(){
   while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS) == 0 ) {;}
 }
 
+
+void enable_gpio(){
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
+	GPIOC->MODER &= ~(3UL << (2 * LED_PIN));
+	GPIOC->MODER |=  	0UL << (2 * LED_PIN);
+}
+void EXTI15_10_IRQHandler(void){
+	// Check to make sure its the right pin
+	if((EXTI->PR1 & EXTI_PR1_PIF13) == EXTI_PR1_PIF13){
+		if(wiper_speed <= 750){
+			is_wiping = 1;
+			wiper_speed += 250;
+		}else{
+			wiper_speed = 0;
+			is_wiping = 0;
+		}
+
+		EXTI->PR1 |= EXTI_PR1_PIF13;
+	}
+}
+void EXTI_Init(void){
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+	//NVIC->ISER[1] = 1 << 8;
+	SYSCFG->EXTICR[3] &= ~SYSCFG_EXTICR4_EXTI13;
+	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PC;
+	EXTI->RTSR1 |=  EXTI_RTSR1_RT13;
+	EXTI->FTSR1 &= ~EXTI_FTSR1_FT13;
+	EXTI->IMR1 	|=  EXTI_IMR1_IM13;
+	NVIC_SetPriority(EXTI15_10_IRQn, 0);
+	NVIC_EnableIRQ(EXTI15_10_IRQn);
+}
 
 void configure_devices(){
 
@@ -66,7 +99,6 @@ void configure_devices(){
 
 
 void Timer2_Initialization(){
-
 	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
 	
 	TIM2->CR1 &= ~(1UL); //set direction to up-counting
@@ -158,14 +190,15 @@ void SysTick_Handler(void){
 
 
 int main(void){
-
-	//enable_HSI();
 	int output = 500;
 	int dir = 1;
+	//enable_HSI();
 	configure_devices();
 	Timer2_Initialization();
 	Timer5_Initialization();
-	SysTick_Initialize(4000);
+	SysTick_Initialize(8000);
+	enable_gpio();
+	EXTI_Init();
   // Dead loop & program hangs here
 
   //cycle	= 0.0;
@@ -173,14 +206,22 @@ int main(void){
 
 	TIM5->CCR1 = 1750; //Rotate motor by specified angle
 	Delay(1000);
-	TIM5->CCR1 = 1850;
+	TIM5->CCR1 = 1870;
+	Delay(1000);
+
 	while(1){
-		if(output > 999 || output < 0){
-			dir = -dir;
+		if(is_wiping){
+			TIM5->CCR1 = 1750;
+			Delay(1000 - wiper_speed);
+			TIM5->CCR1 = 1870;
+			Delay(1000 - wiper_speed);
 		}
-		output += dir;
-		TIM2->CCR1 = output;
-		Delay(1);
+//		if(output > 999 || output < 0){
+//			dir = -dir;
+//		}
+//		output += dir;
+//		TIM2->CCR1 = output;
+//		Delay(1);
 	}
 		
 }
