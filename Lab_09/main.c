@@ -7,6 +7,7 @@
 double cycle;	
 double cycle_increment;
 int state = 0;
+int adc_in;
 
 void ADC_Wakeup (void);
 void enable_ADC (void);
@@ -15,12 +16,13 @@ void gpio_init (void);
 
 int main(void){
 	enable_HSI();
-	ADC_Wakeup();
 	enable_ADC();
-	
-
+	gpio_init();
+	ADC_Wakeup();
 	while(1){
-
+		ADC1->CR |= ADC_CR_ADSTART;
+		while((ADC123_COMMON->CSR & ADC_CSR_EOC_MST) != ADC_CSR_EOC_MST);
+		adc_in = ADC1->DR;
 	}
 }
 
@@ -34,23 +36,25 @@ void enable_ADC (void) {
 	// Configure CCR
 	ADC123_COMMON->CCR |= ADC_CCR_VREFEN;
 	ADC123_COMMON->CCR &= ADC_CCR_PRESC;
-	ADC123_COMMON->CCR |= ADC_CCR_CKMODE;
+	ADC123_COMMON->CCR |= ADC_CCR_CKMODE_0;
 	ADC123_COMMON->CCR &= ~(ADC_CCR_DUAL);
 	// set right align to 12 bit
-	ADC1->CFGR &= ~ADC_CFGR_ALIGN;
+	ADC1->CFGR |= ADC_CFGR_ALIGN;
 	// set conversion setting six
 	ADC1->SQR1 &= ~ADC_SQR1_L;
 	ADC1->SQR1 &= ~ADC_SQR1_SQ1;
 	ADC1->SQR1 |= (6U << 6);
 	// Select channel 6 
 	ADC1->DIFSEL &= ~ADC_DIFSEL_DIFSEL_6;
-	ADC1->CFGR |= ADC_SMPR1_SMP6;
+	ADC1->SMPR1 |= ADC_SMPR1_SMP6_0;
 	ADC1->CFGR &= ~ADC_CFGR_CONT;
 	ADC1->CFGR &= ~ADC_CFGR_EXTEN;
 	ADC1->CR |= ADC_CR_ADEN;
 	// Wait for adc to be ready
 	while(!(ADC1->ISR | ADC_ISR_ADRDY));
 }
+
+
 void gpio_init(void){
 	// Enable LED_PIN 
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
