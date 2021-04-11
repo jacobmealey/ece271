@@ -7,7 +7,7 @@
 double cycle;	
 double cycle_increment;
 int state = 0;
-int adc_in;
+//volatile uint16_t adc_in;
 
 void ADC_Wakeup (void);
 void enable_ADC (void);
@@ -15,14 +15,25 @@ void enable_HSI (void);
 void gpio_init (void);
 
 int main(void){
+	int i = 0;
+	uint32_t adc_in = 0;
 	enable_HSI();
 	enable_ADC();
-	gpio_init();
 	ADC_Wakeup();
+	gpio_init();
 	while(1){
 		ADC1->CR |= ADC_CR_ADSTART;
-		while((ADC123_COMMON->CSR & ADC_CSR_EOC_MST) != ADC_CSR_EOC_MST);
+		while((ADC123_COMMON->CSR & ADC_CSR_EOC_MST));
+		//GPIOA->ODR |= (1 << LED_PIN);
 		adc_in = ADC1->DR;
+		if((adc_in) < 0x7000){
+						GPIOA->ODR &= ~(1 << LED_PIN);
+
+		}else{
+						GPIOA->ODR |= 1 << LED_PIN;
+
+		}
+		for(i = 0; i < 10000; i++);
 	}
 }
 
@@ -58,9 +69,16 @@ void enable_ADC (void) {
 void gpio_init(void){
 	// Enable LED_PIN 
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
-	GPIOA->MODER &= ~(3UL << (2 * LED_PIN));
-	GPIOA->MODER |=  	1UL << (2 * LED_PIN);
 	
+	// GPIO Mode: Input(00), Output(01), AlterFunc(10), Analog(11, reset)
+	GPIOA->MODER &= ~(3UL<<(2*LED_PIN));  
+	GPIOA->MODER |=   1UL<<(2*LED_PIN);      // Output(01)
+	
+	// GPIO Output Type: Output push-pull (0, reset), Output open drain (1) 
+	GPIOA->OTYPER &= ~(1<<LED_PIN);      // Push-pull
+	
+	// GPIO Push-Pull: No pull-up, pull-down (00), Pull-up (01), Pull-down (10), Reserved (11)
+	GPIOA->PUPDR  &= ~(3<<(2*LED_PIN));  // No pull-up, no pull-down
 	// Set up pin A1 as as analog
 	GPIOA->MODER |= 3UL << (2 * DAC_IN);
 	GPIOA->PUPDR &= ~(3UL << (2 * DAC_IN));
