@@ -7,7 +7,7 @@
 double cycle;	
 double cycle_increment;
 int state = 0;
-uint16_t volatile ADC_Results;
+uint32_t volatile ADC_Results;
 uint8_t volatile DMA_DONE = 0;
 //volatile uint16_t adc_in;
 
@@ -27,7 +27,7 @@ int main(void){
 	gpio_init();
 	while(1){
 		//ADC1->CR |= ADC_CR_ADSTART;
-		while(!DMA_DONE);
+		//while(!DMA_DONE);
 		
 		if((ADC_Results) < 0x7000){
 			GPIOA->ODR &= ~(1 << LED_PIN);
@@ -84,6 +84,9 @@ void enable_dma(){
 	DMA1_Channel1->CCR &= DMA_CCR_PL;
 	DMA1_Channel1->CCR |= DMA_CCR_PL_1;
 	
+	DMA1_Channel1->CCR &= ~DMA_CCR_PSIZE;
+	DMA1_Channel1->CCR |= DMA_CCR_PSIZE_1;
+	
 	// Set Peripheral size to 16 bits
 	DMA1_Channel1->CCR &= ~DMA_CCR_MSIZE;
 	DMA1_Channel1->CCR |= DMA_CCR_MSIZE_0;
@@ -101,7 +104,7 @@ void enable_dma(){
 	DMA1_Channel1->CCR &= ~DMA_CCR_DIR;
 	
 	// Amount of data to trasnfer 
-	DMA1_Channel1->CNDTR = 2;
+	DMA1_Channel1->CNDTR = 1;
 	
 	// Have DMA peripheral address register point to
 	// ADC data register (assumes ADC is in initialized;
