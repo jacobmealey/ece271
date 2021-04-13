@@ -7,29 +7,34 @@
 double cycle;	
 double cycle_increment;
 int state = 0;
+uint16_t volatile ADC_Results;
+uint8_t volatile DMA_DONE = 0;
 //volatile uint16_t adc_in;
 
 void ADC_Wakeup (void);
 void enable_ADC (void);
 void enable_HSI (void);
 void gpio_init (void);
-
+void enable_dma(void);
+void config_timer(void);
 int main(void){
-	uint32_t adc_in = 0;
+	//uint32_t adc_in = 0;
+	config_timer();
 	enable_HSI();
+	enable_dma();
 	enable_ADC();
 	ADC_Wakeup();
 	gpio_init();
 	while(1){
-		ADC1->CR |= ADC_CR_ADSTART;
-		while((ADC123_COMMON->CSR & ADC_CSR_EOC_MST) != ADC_CSR_EOC_MST);
-		//GPIOA->ODR |= (1 << LED_PIN);
-		adc_in = ADC1->DR;
-		if((adc_in) < 0x7000){
+		//ADC1->CR |= ADC_CR_ADSTART;
+		while(!DMA_DONE);
+		
+		if((ADC_Results) < 0x7000){
 			GPIOA->ODR &= ~(1 << LED_PIN);
 		}else{
 			GPIOA->ODR |= 1 << LED_PIN;
 		}
+		//DMA_DONE = 0;
 	}
 }
 
@@ -56,11 +61,76 @@ void enable_ADC (void) {
 	ADC1->SMPR1 |= ADC_SMPR1_SMP6_0;
 	ADC1->CFGR &= ~ADC_CFGR_CONT;
 	ADC1->CFGR &= ~ADC_CFGR_EXTEN;
+	
+	ADC1->CFGR &= ~ADC_CFGR_EXTSEL;
+	ADC1->CFGR |= ADC_CFGR_EXTSEL_3 | ADC_CFGR_EXTSEL_2;
+	ADC1->CFGR &= ~ADC_CFGR_EXTEN;
+	ADC1->CFGR |= ADC_CFGR_EXTEN_0;
+	ADC1->CFGR |= ADC_CFGR_DMACFG;
+	ADC1->CFGR |= ADC_CFGR_DMAEN;
+	ADC1->CR |= ADC_CR_ADSTART;
 	ADC1->CR |= ADC_CR_ADEN;
 	// Wait for adc to be ready
 	while(!(ADC1->ISR | ADC_ISR_ADRDY));
 }
 
+void enable_dma(){
+	// enable DMA 1 clock
+	RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
+	// Disable mem2mem
+	DMA1_Channel1->CCR &= ~DMA_CCR_MEM2MEM;
+	
+	// Set channel 1 to high priority level
+	DMA1_Channel1->CCR &= DMA_CCR_PL;
+	DMA1_Channel1->CCR |= DMA_CCR_PL_1;
+	
+	// Set Peripheral size to 16 bits
+	DMA1_Channel1->CCR &= ~DMA_CCR_MSIZE;
+	DMA1_Channel1->CCR |= DMA_CCR_MSIZE_0;
+	
+	// Disable peripheral increment mode
+	DMA1_Channel1->CCR &= ~DMA_CCR_PINC;
+	
+	// Enable memory increment mode
+	DMA1_Channel1->CCR |= DMA_CCR_MINC;
+	
+	// Enable Circular Mode
+	DMA1_Channel1->CCR |= DMA_CCR_CIRC;
+	
+	// Set data transfer from peripheral to memory
+	DMA1_Channel1->CCR &= ~DMA_CCR_DIR;
+	
+	// Amount of data to trasnfer 
+	DMA1_Channel1->CNDTR = 2;
+	
+	// Have DMA peripheral address register point to
+	// ADC data register (assumes ADC is in initialized;
+	DMA1_Channel1->CPAR = (uint32_t) &(ADC1->DR);
+	
+	// Have DMA store in ADC_Results
+		DMA1_Channel1->CMAR = (uint32_t)&ADC_Results;
+	
+	// DMA Channale select
+	// Map DMA 1 to ADC1
+	DMA1_CSELR->CSELR &= ~DMA_CSELR_C1S;
+	
+	// Enable DMA Channel 1 interrupt
+	DMA1_Channel1->CCR |= DMA_CCR_TCIE;
+	
+	//NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+	DMA1_Channel1->CCR |= DMA_CCR_EN;
+
+}
+
+void DMA1_Channel1_IRQHandler(void) {
+	if((DMA1->ISR & DMA_ISR_TCIF1) == DMA_ISR_TCIF1){
+		DMA1->IFCR |= DMA_IFCR_CTCIF1;
+		
+		DMA1_Channel1->CMAR = (uint32_t) &ADC_Results;
+		DMA_DONE = 1;
+	}
+	DMA1->IFCR |= (DMA_IFCR_CHTIF1 | DMA_IFCR_CGIF1 | DMA_IFCR_CTEIF1);
+}
 
 void gpio_init(void){
 	// Enable LED_PIN 
@@ -119,3 +189,29 @@ wait_time = 20 * (80000000 / 1000000);
  }
 }
 
+void config_timer(void) {
+	// 1 MHz clock
+
+	// Enablbe clock
+	RCC->APB1ENR1 |=  RCC_APB1ENR1_TIM4EN;
+	
+	TIM4->CR1 &= ~TIM_CR1_CMS;
+	TIM4->CR1 &= ~TIM_CR1_DIR;
+	
+	TIM4->CR2 &= ~TIM_CR2_MMS;
+	TIM4->CR2 |= TIM_CR2_MMS_2;
+	
+	TIM4->CCMR1 &= ~TIM_CCMR1_OC1M;
+	TIM4->CCMR1 |= TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2;
+	
+	TIM4->PSC = 7;
+	TIM4->ARR = 1999;
+	TIM4->CCR1 = 500;
+	
+	TIM4->CCER |= TIM_CCER_CC1E;
+	TIM4->EGR |= TIM_EGR_UG;
+	TIM4->CR1 |= TIM_CR1_CEN;
+	
+	NVIC_SetPriority(TIM4_IRQn, 0);
+	NVIC_EnableIRQ(TIM4_IRQn);
+}

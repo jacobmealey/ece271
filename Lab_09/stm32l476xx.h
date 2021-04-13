@@ -3968,7 +3968,7 @@ typedef struct
 /*                                                                            */
 /******************************************************************************/
 /*******************  Bit definition for EXTI_IMR1 register  ******************/
-#define  EXTI_IMR1_IM0                       ((uint32_t)0x00000001U)        /*!< Interrupt Mask on line 0 */
+#define  EXTIEXTI15_10_IRQHandler_IMR1_IM0                       ((uint32_t)0x00000001U)        /*!< Interrupt Mask on line 0 */
 #define  EXTI_IMR1_IM1                       ((uint32_t)0x00000002U)        /*!< Interrupt Mask on line 1 */
 #define  EXTI_IMR1_IM2                       ((uint32_t)0x00000004U)        /*!< Interrupt Mask on line 2 */
 #define  EXTI_IMR1_IM3                       ((uint32_t)0x00000008U)        /*!< Interrupt Mask on line 3 */
