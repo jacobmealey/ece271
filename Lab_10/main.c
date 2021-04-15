@@ -6,6 +6,9 @@
 
 double cycle;	
 double cycle_increment;
+volatile uint32_t pulse_width = 0;
+volatile uint32_t last_captured = 0;
+volatile uint32_t signal_polarity = 0;
 int state = 0;
 // User HSI (high-speed internal) as the processor clock
 void enable_HSI(){
@@ -38,7 +41,7 @@ void setup_clock(void){
 	// Enable timer 4
 	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM4EN;
 	// Set prescalar and ARR
-	TIM4->PSC = 15999;
+	TIM4->PSC = 16; // prescale to 1MHz
 	TIM4->ARR = 0xFFFF;
 	
 	// ??? what ???
@@ -55,9 +58,45 @@ void setup_clock(void){
 	// enable time 4 :)
 	TIM4->CR1 |= TIM_CR1_CEN;
 	NVIC_SetPriority(TIM4_IRQn, 0);
-	
 	NVIC_EnableIRQ(TIM4_IRQn);
 	
+	// Enable Timer 1
+	
+	RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
+	TIM1->PSC = 16;
+	// Period to 100us
+	TIM1->ARR = 99;
+	TIM1->CCMR1 &= ~TIM_CCMR1_OC1M;
+	TIM1->CCMR1 |= TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2;
+	TIM1->CCMR1 |= TIM_CCMR1_OC1PE;
+	
+	TIM1->CCER &= TIM_CCER_CC1NE;
+	TIM1->CCER |= TIM_CCER_CC1P;
+	TIM1->BDTR |= TIM_BDTR_MOE;
+	
+	// Set DC to 10% (pulsewidth 10us)
+	TIM1->CCR1 = 100;
+	
+	TIM1->CR1 |= TIM_CR1_CEN;
+	
+	
+}
+
+void TIM4_IRQHandler(void){
+	uint32_t current_captured;
+	// check interrupt flag
+	if(!(TIM4->SR & TIM_SR_CC1IF)) {
+		current_captured = TIM4->CCR1;
+		signal_polarity = 1 - signal_polarity;
+		
+		if(!signal_polarity)
+			pulse_width += current_captured - last_captured;
+		
+		last_captured = current_captured;
+	}
+	
+	if((TIM4->SR & TIM_SR_UIF) != 0)
+		TIM4->SR &= ~TIM_SR_UIF;
 }
 
 int main(void){
