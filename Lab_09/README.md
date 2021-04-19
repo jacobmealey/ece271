@@ -18,19 +18,28 @@ Answers to Pre-lab Questions
 This part is required only if you are requested to write your answers here. 
 
 * Question 1:
+MASK: ~(3 << 2 * 1)
+Value:  2 << 2 * 1
 
+MASK:  ~(3 << 1)
+Value:   1 << 1
 
-* Question 2:
+* Question 3:
+12 / 3 = 4bits/volt => 0xF
 
+to check if the voltage is greater than 2 volts ADC > 0x0FF 
 
 Answers to After-lab Questions
 -------
 
 * Question 1:
-
+ - Measured voltage: 
 
 * Question 2:
+ADC < 0xF
 
+* Question 3:
+ADC < 0xFF
 
 Suggestions and Comments
 -------
