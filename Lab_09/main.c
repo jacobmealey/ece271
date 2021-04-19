@@ -1,4 +1,9 @@
 #include "stm32l476xx.h"
+#include "I2C.h"
+#include "I2C_gpio.h"
+#include "ssd1306.h"
+#include <stdio.h>
+
 // PA.5  <--> Green LED
 // PC.13 <--> Blue user button
 #define LED_PIN    5
@@ -10,7 +15,7 @@ int state = 0;
 uint32_t volatile ADC_Results;
 uint8_t volatile DMA_DONE = 0;
 //volatile uint16_t adc_in;
-
+float vin = 0.0;
 void ADC_Wakeup (void);
 void enable_ADC (void);
 void enable_HSI (void);
@@ -18,18 +23,29 @@ void gpio_init (void);
 void enable_dma(void);
 void config_timer(void);
 int main(void){
+	char str[50];
 	//uint32_t adc_in = 0;
 	config_timer();
 	enable_HSI();
+	gpio_init();
+	I2C_GPIO_init();
+	ssd1306_Init();
+	ssd1306_Fill(Black);
 	enable_dma();
 	enable_ADC();
 	ADC_Wakeup();
 	gpio_init();
+
 	while(1){
+		ssd1306_Fill(Black);
+		ssd1306_SetCursor(0, 2);
 		//ADC1->CR |= ADC_CR_ADSTART;
 		//while(!DMA_DONE);
-		
-		if((ADC_Results) < 0x7000){
+		vin = (3.3 * ADC_Results) / 0xFFF0;
+		sprintf(str, "%.02f Volts", vin);
+		ssd1306_WriteString(str, Font_6x8, White);
+		ssd1306_UpdateScreen();
+		if(vin < 3.3 / 2){
 			GPIOA->ODR &= ~(1 << LED_PIN);
 		}else{
 			GPIOA->ODR |= 1 << LED_PIN;
