@@ -32,6 +32,12 @@ void enable_HSI(){
 void setup_gpio(void){
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
 	// Set up PB.6 as AF 
+	//Select TIM4_CH1 for PB6 function
+  GPIOB->AFR[0] &= ~(0xF000000);
+  GPIOB->AFR[0] |= 0x2000000;
+	//Select TIM3_CH2 as PB5 alternate function
+  GPIOB->AFR[0] &= ~(0xF00000);
+  GPIOB->AFR[0] |= 0x200000;
 	GPIOB->MODER &= ~(3UL << 2 * 6);
 	GPIOB->MODER |=   2UL << 2 * 6;
 	
@@ -44,47 +50,56 @@ void setup_clock(void){
 	// Enable timer 4
 	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM4EN;
 	// Set prescalar and ARR
-	TIM4->PSC = 16; // prescale to 1MHz
+	TIM4->PSC = 15; // prescale to 1MHz
 	TIM4->ARR = 0xFFFF;
 	
 	// ??? what ???
-	TIM4->CCMR1 |= TIM_CCMR1_CC1S_1;
+	TIM4->CCMR1 |= TIM_CCMR1_CC1S_0;
 	TIM4->CCMR1 &= ~(TIM_CCMR1_IC1F);
 	TIM4->CCER |= TIM_CCER_CC1P | TIM_CCER_CC1NP;
-	
 	// Clear input prescaler 
 	TIM4->CCMR1 &= ~TIM_CCMR1_IC1PSC;
-	
+	TIM4->CCER |= TIM_CCER_CC1E;
 	// enable interrupt generation 
+	TIM4->DIER |= TIM_DIER_CC1IE;
 	TIM4->DIER |= TIM_DIER_UIE;
-	
 	// enable time 4 :)
 	TIM4->CR1 |= TIM_CR1_CEN;
 	NVIC_SetPriority(TIM4_IRQn, 0);
 	NVIC_EnableIRQ(TIM4_IRQn);
 	
-	// Enable Timer 1
-	
-	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM3EN;
-	TIM3->PSC = 16;
-	// Period to 100us
-	TIM3->ARR = 0xFFFF;
-  //This makes the output high for 10us every 65ms
-  TIM3->CCMR1 &= ~TIM_CCMR1_OC2M;
-  TIM3->CCMR1 |= (TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2);
 
-  //Select active high polarity 
-  TIM3->CCER &= ~TIM_CCER_CC2P;
-  TIM3->CCER |= TIM_CCER_CC2P;
+	  RCC->APB1ENR1 |= RCC_APB1ENR1_TIM3EN;
 
-	TIM3->BDTR |= TIM_BDTR_MOE;
-	
-	// Set DC to 10% (pulsewidth 10us)
-	TIM3->CCR1 = 10;
-	
-	TIM3->CR1 |= TIM_CR1_CEN;
-	
-	
+    //Set Prescalar to bring 16MHz HSI down to 1MHz
+    TIM3->PSC |= 15; //1MHz = 16MHz /(1 + 15)
+
+    //Set ARR to max value 0xFFFF
+    TIM3->ARR |= 0xFFFF;
+
+    //Set CH2 to upcounting 
+    TIM3->CR1 &= ~TIM_CR1_DIR;
+
+    //Set width for 10us
+    TIM3->CCR2 = 10;
+
+    //Enable main output 
+    TIM3->BDTR |= TIM_BDTR_MOE; 
+
+    //Set PWM mode 1
+    //This makes the output high for 10us every 65ms
+    TIM3->CCMR1 &= ~TIM_CCMR1_OC2M;
+    TIM3->CCMR1 |= (TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2);
+
+    //Select active high polarity 
+    TIM3->CCER &= ~TIM_CCER_CC2P;
+    TIM3->CCER |= TIM_CCER_CC2P;
+
+    //Enable output for channel 2
+    TIM3->CCER |= TIM_CCER_CC2E;
+
+    //Enable timer 3
+    TIM3->CR1 |= TIM_CR1_CEN;
 }
 
 void TIM4_IRQHandler(void){
@@ -125,8 +140,8 @@ int main(void){
 	enable_HSI();
 	//I2C_GPIO_init();
 	//ssd1306_Init();
-	setup_gpio();
 	setup_clock();
+	setup_gpio();
 	
   cycle	= 0.0;
   cycle_increment	= 0.01;
