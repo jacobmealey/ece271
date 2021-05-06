@@ -1,3 +1,6 @@
+// ECE 271 - ADC wtih DMA and screen
+// Author: Jacob Mealey
+
 #include "stm32l476xx.h"
 #include "I2C.h"
 #include "I2C_gpio.h"
@@ -22,6 +25,8 @@ void enable_HSI (void);
 void gpio_init (void);
 void enable_dma(void);
 void config_timer(void);
+
+
 int main(void){
 	char str[50];
 	//uint32_t adc_in = 0;
